@@ -1,0 +1,31 @@
+<!doctype html>
+<html class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+</head>
+
+<body class="bg-[#f5f5f5] min-h-screen flex flex-col">
+    <header class="bg-[#162660] shadow-lg sticky top-0 w-full z-50">
+        {% block content %}
+        {% endblock %}
+    </header>
+
+    <main id="mainContent">
+        {% block mainContent %}
+        <!-- Main content will be inserted here by child templates -->
+        {% endblock %}
+    </main>
+
+    <footer class="bg-white shadow-lg border-t border-gray-200 mt-auto py-6">
+        <center class="text-2xl text-gray-600 font-medium">
+            Copyright &copy; QR 2025. All Rights Reserved
+            <p>TABURNAL, Emmanuel Brylle O. &
+                BAGUIO, Theodore Jave R.</p>
+        </center>
+    </footer>
+</body>
+
+</html>
