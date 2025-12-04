@@ -1,95 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html class="h-full">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}QR Scanner System{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .flash-message {
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-            .responsive-text {
-                font-size: 0.875rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
 </head>
 
 <body class="bg-[#f5f5f5] min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-gradient-to-r from-[#162660] to-[#1a237e] shadow-lg">
-        {% block content %}{% endblock %}
+    <header class="bg-[#162660] shadow-lg sticky top-0 w-full z-50">
+        {% block content %}
+        {% endblock %}
     </header>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="fixed top-4 right-4 z-50 space-y-2">
-        {% for category, message in messages %}
-        <div class="flash-message px-6 py-4 rounded-lg shadow-lg text-white 
-                    {% if category == 'error' %}bg-red-500
-                    {% elif category == 'success' %}bg-green-500
-                    {% elif category == 'info' %}bg-blue-500
-                    {% else %}bg-gray-500{% endif %}">
-            <div class="flex items-center justify-between gap-4">
-                <span>{{ message }}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
+    <main id="mainContent"">
+        {% block mainContent %}
+        <!-- Main content will be inserted here by child templates -->
+        {% endblock %}
+    </main>
 
-    <!-- Main Content -->
-    <div class="flex-1">
-        {% block mainContent %}{% endblock %}
-    </div>
+    <footer class=" bg-white shadow-lg border-t border-gray-200 mt-auto py-6">
+        <center class="text-2xl text-gray-600 font-medium">
+            Copyright &copy; QR 2025. All Rights Reserved
+            <p>TABURNAL, Emmanuel Brylle O. &
+                BAGUIO, Theodore Jave R.</p>
+        </center>
+        </footer>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>&copy; 2024 QR Scanner System. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
-    {% block scripts %}{% endblock %}
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+        <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
 </body>
 
 </html>
