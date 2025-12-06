@@ -1,60 +1,55 @@
 {% extends "base.html" %}
 
+
+
 {% block content %}
-<div class="flex justify-between items-center w-full px-4 py-3">
-    <div class="flex justify-between items-center w-full px-4 py-3">
-        <h1 class="text-3xl font-bold text-[#f5f5f5] shadow-blue-300">Python(19877) 8:00 - 10:30 A.M</h1>
+<div class="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 py-4 px-4 sm:px-6">
+    <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold text-[#f5f5f5] text-center sm:text-left">
+        Python(19877) 8:00 - 10:30 A.M
+    </h1>
+    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-end">
+        <button type="button" onclick="window.location.href='/'"
+            class="flex-1 sm:flex-none rounded-lg bg-sky-500 hover:bg-sky-600 text-white px-3 py-2 text-sm sm:text-base lg:text-[20px] gap-1 sm:gap-2 font-medium flex items-center justify-center">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            <span class="hidden sm:inline">SCANNER</span>
+            <span class="sm:hidden">SCAN</span>
+        </button>
 
-        <div class=" flex justify-end">
-
-            <button type="button" onclick="window.location.href='/'"
-                class="rounded-lg bg-sky-500 hover:bg-sky-600 text-white px-3 py-2 text-[20px] gap-2 font-medium flex items-center mr-5">
-
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-
-                SCANNER
-            </button>
-
-            <button type="button" onclick="window.location.href='/login'"
-                class="rounded-lg bg-green-400 hover:bg-green-500 text-white px-3 py-2 text-[20px] gap-2 font-medium flex items-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                LOGIN
-            </button>
-        </div>
-
+        <button type="button" onclick="window.location.href='/login'"
+            class="flex-1 sm:flex-none rounded-lg bg-green-400 hover:bg-green-500 text-white px-3 py-2 text-sm sm:text-base lg:text-[20px] gap-1 sm:gap-2 font-medium flex items-center justify-center">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            <span class="hidden sm:inline">LOGIN</span>
+            <span class="sm:hidden">LOG</span>
+        </button>
     </div>
+</div>
+{% endblock %}
 
-    {% endblock %}
-
-    {% block mainContent %}
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Title Section -->
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-900 mb-3">QR Reader</h2>
-            <p class="text-gray-600 text-lg">Scan student QR codes too see the information</p>
+{% block mainContent %}
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <!-- Title Section -->
+    <div class="text-center mb-8 sm:mb-12">
+        <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-3">QR Reader</h2>
+        <p class="text-gray-600 text-base sm:text-lg">Scan student QR codes to see the information</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-8 max-w-2xl mx-auto">
+        <!--Scanner Frame-->
+        <div class="bg-gray-900 rounded-xl overflow-hidden mb-6">
+            <div id="reader" class="w-full min-h-[300px] sm:min-h-[400px]"></div>
         </div>
-
-
-        <div class=" bg-white rounded-2xl shadow-lg p-8 max-w-2xl mx-auto">
-            <!--Scanner Frame-->
-            <div class="bg-gray-900 rounded-xl overflow-hidden mb-6">
-                <div id="reader" class="w-full min-h-[400px]"></div>
-            </div>
-
-
-            <div class="flex gap-3">
-                <button id="startBtn"
-                    class="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 rounded-xl transition-colors text-lg">
-                    Start Scan
-            </div>
+        <div class="flex gap-3">
+            <button id="startBtn"
+                class="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 sm:py-4 rounded-xl transition-colors text-base sm:text-lg">
+                Start Scan
+            </button>
         </div>
+    </div>
+</main>
 
-    </main>
-
-    {% endblock %}
+{% endblock %}

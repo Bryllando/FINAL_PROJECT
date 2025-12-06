@@ -8,27 +8,27 @@
 </head>
 
 <body class="bg-[#f5f5f5] min-h-screen flex flex-col">
+
+    <!-- Header template-->
     <header class="bg-[#162660] shadow-lg sticky top-0 w-full z-50">
         {% block content %}
         {% endblock %}
     </header>
 
-    <main id="mainContent"">
+    <main id="mainContent">
         {% block mainContent %}
-        <!-- Main content will be inserted here by child templates -->
         {% endblock %}
     </main>
 
-    <footer class=" bg-white shadow-lg border-t border-gray-200 mt-auto py-6">
-        <center class="text-2xl text-gray-600 font-medium">
-            Copyright &copy; QR 2025. All Rights Reserved
-            <p>TABURNAL, Emmanuel Brylle O. &
-                BAGUIO, Theodore Jave R.</p>
-        </center>
-        </footer>
+    <footer class="bg-white shadow-lg border-t border-gray-200 mt-auto py-4 sm:py-6">
+        <div class="text-center text-base sm:text-lg lg:text-2xl text-gray-600 font-medium px-4">
+            <p class="mb-1">Copyright &copy; QR 2025. All Rights Reserved</p>
+            <p class="text-sm sm:text-base lg:text-lg">TABURNAL, Emmanuel Brylle O. & BAGUIO, Theodore Jave R.</p>
+        </div>
+    </footer>
 
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-        <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
 </body>
 
 </html>

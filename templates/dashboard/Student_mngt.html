@@ -1,494 +1,124 @@
-{% extends "base.html" %}
+{% extends "dashboard.html" %}
 
-{% block content %}
-<div class="flex justify-between items-center w-full px-6 py-4 text-white">
-    <h1 class="text-xl font-bold">Python(19877) 8:00 - 10:30 A.M</h1>
-    <a href="{{ url_for('logout') }}"
-        class="bg-green-500 hover:bg-green-600 px-4 py-1 rounded text-sm font-bold transition">LOGOUT</a>
-</div>
-{% endblock %}
-
-{% block mainContent %}
-<div class="min-h-screen bg-[#f5f5f5]">
-    <!-- Desktop Sidebar (fixed) -->
-    <aside
-        class="hidden md:flex md:flex-col fixed left-0 top-0 h-screen w-64 bg-white shadow-xl border-r border-gray-200 z-40">
-        <div class="p-4 border-b">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#1a237e] rounded flex items-center justify-center text-white font-bold">QR
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Course</div>
-                    <div class="font-semibold">Python (19877)</div>
-                </div>
-            </div>
+{% block StudentContent %}
+<main class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 w-full">
+    <div class="max-w-7xl mx-auto">
+        <!-- Student Management Header -->
+        <div class="p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center">STUDENT MANAGEMENT
+            </h2>
         </div>
 
-        <nav class="mt-4 flex-1 overflow-y-auto" aria-label="Main navigation">
-            <a href="{{ url_for('admin') }}"
-                class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition">
-                <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <span class="truncate">User management</span>
-            </a>
-
-            <a href="{{ url_for('student_mngt') }}"
-                class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 border-l-4 border-[#1a237e]">
-                <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span class="truncate font-medium">Student management</span>
-            </a>
-
-            <a href="{{ url_for('attendance') if 'attendance' in globals() else '#' }}"
-                class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition">
-                <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                <span class="truncate">Attendance</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t">
-            <a href="{{ url_for('logout') }}" class="flex items-center text-gray-600 hover:text-red-500 transition">
-                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                LOGOUT
-            </a>
-        </div>
-    </aside>
-
-    <!-- Mobile top bar with collapsible menu -->
-    <div class="md:hidden bg-white shadow border-b">
-        <div class="px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-[#1a237e] rounded flex items-center justify-center text-white font-bold">QR</div>
-                <div>
-                    <div class="text-sm text-gray-600">Course</div>
-                    <div class="font-semibold">Python (19877)</div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <button id="mobileMenuBtn" aria-expanded="false" aria-controls="mobileMenu"
-                    class="p-2 rounded-md text-gray-700 hover:bg-gray-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <a href="{{ url_for('logout') }}"
-                    class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm text-white">LOGOUT</a>
-            </div>
-        </div>
-
-        <div id="mobileMenu" class="hidden px-4 pb-4">
-            <nav class="space-y-1" aria-label="Mobile navigation">
-                <a href="{{ url_for('admin') }}" class="block px-3 py-2 rounded hover:bg-gray-50">User management</a>
-                <a href="{{ url_for('student_mngt') }}"
-                    class="block px-3 py-2 rounded bg-gray-100 border-l-4 border-[#1a237e]">Student management</a>
-                <a href="{{ url_for('attendance') if 'attendance' in globals() else '#' }}"
-                    class="block px-3 py-2 rounded hover:bg-gray-50">Attendance</a>
-                <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded text-red-500">LOGOUT</a>
-            </nav>
-        </div>
-    </div>
-
-    <!-- Main content area (with left margin on md+) -->
-    <main class="pt-6 pb-12 md:ml-64">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Left: Profile / Student Information -->
-                <section class="lg:col-span-4 bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">STUDENT INFORMATION</h2>
-
-                    <form id="studentInfoForm" method="post" action="{{ url_for('save_student') }}" class="space-y-4">
-                        {% if csrf_token %}
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        {% endif %}
-
-                        <div class="flex items-center gap-4">
-                            <div class="w-24 h-24 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                                {% if selected_student and selected_student.profile_picture %}
-                                <img src="{{ url_for('static', filename=selected_student.profile_picture) }}"
-                                    alt="Profile" class="w-full h-full object-cover">
-                                {% else %}
-                                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5.121 17.804A9 9 0 1118.88 6.196 9 9 0 015.12 17.804z"></path>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- Student Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white divide-gray-400 border-2 rounded-lg shadow-md p-4 sm:p-6">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4 sm:mb-6">STUDENT
+                        INFORMATION</h3>
+                    <form id="studentForm" class="space-y-3 sm:space-y-4">
+                        <!-- Profile Picture -->
+                        <div class="flex flex-col items-center mb-4">
+                            <div id="imagePreview"
+                                class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-gray-300">
+                                <svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                        clip-rule="evenodd" />
                                 </svg>
-                                {% endif %}
-                            </div>
-
-                            <div class="flex-1">
-                                <label class="block text-sm text-gray-600">IDNO</label>
-                                <input id="idno" name="idno" type="text"
-                                    value="{{ selected_student.idno if selected_student else '' }}" required
-                                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
-                                <label class="block text-sm text-gray-600 mt-3">Email</label>
-                                <input id="email" name="email" type="email"
-                                    value="{{ selected_student.email if selected_student else '' }}"
-                                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
                             </div>
                         </div>
 
                         <div>
-                            <label for="lastname" class="block text-sm font-medium text-gray-700">LASTNAME</label>
-                            <input id="lastname" name="lastname" type="text"
-                                value="{{ selected_student.lastName if selected_student else '' }}" required
-                                class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">ID
+                                No</label>
+                            <input type="text" id="idNo" placeholder="Enter ID Number"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
                         </div>
-
                         <div>
-                            <label for="firstname" class="block text-sm font-medium text-gray-700">FIRSTNAME</label>
-                            <input id="firstname" name="firstname" type="text"
-                                value="{{ selected_student.firstName if selected_student else '' }}" required
-                                class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Last
+                                Name</label>
+                            <input type="text" id="lastName" placeholder="Enter Last Name"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
                         </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="course" class="block text-sm font-medium text-gray-700">COURSE</label>
-                                <select id="course" name="course" required
-                                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
-                                    <option value="">Select course</option>
-                                    <option value="BSIT" {% if selected_student and selected_student.course=='BSIT'
-                                        %}selected{% endif %}>BSIT</option>
-                                    <option value="BSCS" {% if selected_student and selected_student.course=='BSCS'
-                                        %}selected{% endif %}>BSCS</option>
-                                    <option value="BSCpE" {% if selected_student and selected_student.course=='BSCpE'
-                                        %}selected{% endif %}>BSCpE</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="level" class="block text-sm font-medium text-gray-700">LEVEL</label>
-                                <select id="level" name="level" required
-                                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
-                                    <option value="">Select level</option>
-                                    <option value="1" {% if selected_student and selected_student.level=='1'
-                                        %}selected{% endif %}>1</option>
-                                    <option value="2" {% if selected_student and selected_student.level=='2'
-                                        %}selected{% endif %}>2</option>
-                                    <option value="3" {% if selected_student and selected_student.level=='3'
-                                        %}selected{% endif %}>3</option>
-                                    <option value="4" {% if selected_student and selected_student.level=='4'
-                                        %}selected{% endif %}>4</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">First
+                                Name</label>
+                            <input type="text" id="firstName" placeholder="Enter First Name"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
                         </div>
-
-                        <div class="flex gap-3 justify-end pt-2">
-                            <button type="button" onclick="clearStudentForm()"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded">CLEAR</button>
-                            <button type="submit"
-                                class="bg-[#1a237e] hover:bg-[#0f1a5a] text-white py-2 px-4 rounded">EDIT</button>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Course</label>
+                            <select id="course"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                                <option value="">Select Course</option>
+                                <option value="BSIT">BSIT</option>
+                                <option value="BSCS">BSCS</option>
+                                <option value="BSIS">BSIS</option>
+                                <option value="BSCpE">BSCpE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Level</label>
+                            <select id="level"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                                <option value="">Select Level</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+                        <div class="pt-2 sm:pt-4">
+                            <button type="submit" id="submitBtn"
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition text-sm sm:text-base">
+                                EDIT
+                            </button>
                         </div>
                     </form>
-                </section>
+                </div>
+            </div>
 
-                <!-- Right: Students Table + Actions -->
-                <section class="lg:col-span-8 bg-white rounded-xl shadow-md border border-gray-200 p-6 overflow-x-auto">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold text-gray-800">Students</h2>
-                        <div class="flex items-center gap-3">
-                            <button onclick="openAddModal()"
-                                class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">ADD</button>
-                            <input id="searchInput" type="text" placeholder="Search by name or ID"
-                                class="px-3 py-1 rounded border border-gray-200 text-sm" oninput="filterTable()">
-                        </div>
+            <!-- Student Table -->
+            <div class="lg:col-span-2">
+                <div>
+                    <!-- Add Student Button -->
+                    <div class=" p-3 sm:p-4 flex justify-end">
+                        <button id="addStudentBtn"
+                            class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition text-xs sm:text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            ADD STUDENT
+                        </button>
                     </div>
 
-                    <table id="studentsTable" class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium text-gray-600">IDNO</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-600">LASTNAME</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-600">FIRSTNAME</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-600">COURSE</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-600">LEVEL</th>
-                                <th class="px-4 py-3 text-center font-medium text-gray-600">ACTION</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            {% for s in student_account %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium text-[#1a237e]">{{ s.idno }}</td>
-                                <td class="px-4 py-3">{{ s.lastName }}</td>
-                                <td class="px-4 py-3">{{ s.firstName }}</td>
-                                <td class="px-4 py-3">{{ s.course }}</td>
-                                <td class="px-4 py-3">{{ s.level }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="inline-flex gap-2">
-                                        <button type="button" onclick="viewProfile('{{ s.idno }}')"
-                                            class="bg-sky-500 hover:bg-sky-600 text-white p-2 rounded" title="View">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z">
-                                                </path>
-                                            </svg>
-                                        </button>
-
-                                        <button type="button"
-                                            onclick="populateForm('{{ s.idno }}', '{{ s.lastName|e }}', '{{ s.firstName|e }}', '{{ s.course|e }}', '{{ s.level|e }}', '{{ (s.email|e) if s.email else '' }}')"
-                                            class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15.232 5.232l3.536 3.536M9 11l6-6"></path>
-                                            </svg>
-                                        </button>
-
-                                        <a href="{{ url_for('delete_student', idno=s.idno) }}"
-                                            class="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
-                                            onclick="return confirm('Are you sure you want to delete this student?')"
-                                            title="Delete">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6">
-                                                </path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">No students found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </section>
-            </div>
-        </div>
-    </main>
-</div>
-
-<!-- Add Student Modal -->
-<div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-        <div class="flex items-center justify-between px-6 py-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-800">Add Student</h3>
-            <button onclick="closeAddModal()" class="text-gray-500 hover:text-gray-700" aria-label="Close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-            </button>
-        </div>
-
-        <form id="addForm" action="{{ url_for('add_student') }}" method="post" class="px-6 py-4 space-y-4">
-            {% if csrf_token %}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% endif %}
-
-            <div>
-                <label for="add_idno" class="block text-sm font-medium text-gray-700">IDNO</label>
-                <input id="add_idno" name="idno" type="text" required
-                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm">
-            </div>
-
-            <div>
-                <label for="add_lastname" class="block text-sm font-medium text-gray-700">LASTNAME</label>
-                <input id="add_lastname" name="lastName" type="text" required
-                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm">
-            </div>
-
-            <div>
-                <label for="add_firstname" class="block text-sm font-medium text-gray-700">FIRSTNAME</label>
-                <input id="add_firstname" name="firstName" type="text" required
-                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="add_course" class="block text-sm font-medium text-gray-700">COURSE</label>
-                    <select id="add_course" name="course" required
-                        class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm">
-                        <option value="">Select course</option>
-                        <option value="BSIT">BSIT</option>
-                        <option value="BSCS">BSCS</option>
-                        <option value="BSCpE">BSCpE</option>
-                    </select>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <table class="w-full min-w-[600px]">
+                            <thead class="bg-[#4a5568] text-white">
+                                <tr>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">
+                                        IDNO</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">
+                                        LASTNAME</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">
+                                        FIRSTNAME</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">
+                                        COURSE</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">
+                                        LEVEL</th>
+                                    <th class="px-3 sm:px-4 py-3 text-center text-xs sm:text-sm font-semibold">
+                                        ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody" class="divide-y divide-gray-200">
+                                <!-- Table rows will be inserted here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <div>
-                    <label for="add_level" class="block text-sm font-medium text-gray-700">LEVEL</label>
-                    <select id="add_level" name="level" required
-                        class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm">
-                        <option value="">Select level</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeAddModal()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded">CANCEL</button>
-                <button type="submit" class="bg-[#1a237e] hover:bg-[#0f1a5a] text-white py-2 px-4 rounded">SAVE</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- View Profile Modal -->
-<div id="profileModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4">
-        <div class="flex items-center justify-between px-6 py-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-800">Student Profile</h3>
-            <button onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-700" aria-label="Close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-            </button>
-        </div>
-
-        <div class="px-6 py-6">
-            <div class="flex gap-6">
-                <div class="w-28 h-28 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                    <img id="profile_pic_view" src="" alt="Profile" class="w-full h-full object-cover hidden">
-                    <svg id="profile_pic_placeholder" class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M5.121 17.804A9 9 0 1118.88 6.196 9 9 0 015.12 17.804z"></path>
-                    </svg>
-                </div>
-
-                <div class="flex-1">
-                    <p class="text-sm text-gray-600">IDNO</p>
-                    <p id="profile_idno" class="font-semibold text-[#1a237e]"></p>
-
-                    <p class="text-sm text-gray-600 mt-2">Name</p>
-                    <p id="profile_name" class="font-semibold text-gray-800"></p>
-
-                    <p class="text-sm text-gray-600 mt-2">Course / Level</p>
-                    <p id="profile_course_level" class="font-semibold text-gray-800"></p>
-
-                    <p class="text-sm text-gray-600 mt-2">Email</p>
-                    <p id="profile_email" class="font-semibold text-gray-800"></p>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end gap-3">
-                <button type="button" onclick="closeProfileModal()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded">CLOSE</button>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-    // Mobile menu toggle
-    document.getElementById('mobileMenuBtn')?.addEventListener('click', function () {
-        const menu = document.getElementById('mobileMenu');
-        const expanded = this.getAttribute('aria-expanded') === 'true';
-        this.setAttribute('aria-expanded', String(!expanded));
-        if (menu) menu.classList.toggle('hidden');
-    });
-
-    // Populate left form with selected student data for editing
-    function populateForm(idno, lastName, firstName, course, level, email) {
-        document.getElementById('idno').value = idno;
-        document.getElementById('lastname').value = lastName;
-        document.getElementById('firstname').value = firstName;
-        document.getElementById('course').value = course;
-        document.getElementById('level').value = level;
-        if (document.getElementById('email')) document.getElementById('email').value = email || '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function clearStudentForm() {
-        document.getElementById('studentInfoForm').reset();
-    }
-
-    function openAddModal() {
-        const el = document.getElementById('addModal');
-        if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
-    }
-
-    function closeAddModal() {
-        const el = document.getElementById('addModal');
-        if (el) { el.classList.remove('flex'); el.classList.add('hidden'); }
-    }
-
-    function viewProfile(idno) {
-        const rows = document.querySelectorAll('#studentsTable tbody tr');
-        let found = null;
-        rows.forEach(row => {
-            const cell = row.querySelector('td');
-            if (cell && cell.textContent.trim() === idno) {
-                const tds = row.querySelectorAll('td');
-                found = {
-                    idno: tds[0].textContent.trim(),
-                    lastName: tds[1].textContent.trim(),
-                    firstName: tds[2].textContent.trim(),
-                    course: tds[3].textContent.trim(),
-                    level: tds[4].textContent.trim()
-                };
-            }
-        });
-
-        if (found) {
-            document.getElementById('profile_idno').textContent = found.idno;
-            document.getElementById('profile_name').textContent = found.lastName + ', ' + found.firstName;
-            document.getElementById('profile_course_level').textContent = found.course + ' / ' + found.level;
-            document.getElementById('profile_email').textContent = '';
-        }
-
-        const pm = document.getElementById('profileModal');
-        if (pm) { pm.classList.remove('hidden'); pm.classList.add('flex'); }
-    }
-
-    function closeProfileModal() {
-        const pm = document.getElementById('profileModal');
-        if (pm) { pm.classList.remove('flex'); pm.classList.add('hidden'); }
-    }
-
-    function filterTable() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#studentsTable tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(q) ? '' : 'none';
-        });
-    }
-
-    // Close modals on Escape
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            ['addModal', 'profileModal'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && !el.classList.contains('hidden')) {
-                    el.classList.remove('flex');
-                    el.classList.add('hidden');
-                }
-            });
-        }
-    });
-
-    // Ensure modals hidden initially
-    document.addEventListener('DOMContentLoaded', function () {
-        ['addModal', 'profileModal'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
-        });
-    });
-</script>
+</main>
 {% endblock %}

@@ -71,11 +71,11 @@ def register():
     return render_template('auth/register.html')
 
 
-@app.route('/dashboard')
+@app.route('/admin')
 @login_required
 def dashboard():
-    students = db_helper.get_all()
-    return render_template('dashboard.html', students=students)
+    user = db_helper.get_all()
+    return render_template('admin.html', user_account=user)
 
 
 @app.route('/logout')

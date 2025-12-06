@@ -1,220 +1,87 @@
-{% extends "base.html" %}
+{% extends "dashboard.html" %}
 
-{% block content %}
-<div class="flex justify-between items-center w-full px-6 py-4 text-white">
-    <h1 class="text-xl font-bold">Python(19877) 8:00 - 10:30 A.M</h1>
-    <a href="{{ url_for('logout') }}"
-        class="bg-green-500 hover:bg-green-600 px-4 py-1 rounded text-sm font-bold transition">LOGOUT</a>
-</div>
-{% endblock %}
-
-{% block mainContent %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Sidebar -->
-        <aside class="lg:col-span-3 bg-white rounded-xl shadow-md border border-gray-200 p-4">
-            <div class="mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-[#1a237e] rounded flex items-center justify-center text-white font-bold">QR
-                    </div>
-                    <div>
-                        <div class="text-sm text-gray-600">Course</div>
-                        <div class="font-semibold">Python (19877)</div>
-                    </div>
-                </div>
-            </div>
-
-            <nav class="space-y-1">
-                <a href="{{ url_for('admin') }}"
-                    class="flex items-center justify-between px-4 py-3 rounded-lg bg-[#162660] text-white">
-                    <span class="font-medium">User management</span>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </a>
-
-                <a href="{{ url_for('student_mngt') }}"
-                    class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-50 transition">
-                    Student management
-                </a>
-
-                <a href="{{ url_for('attendance') if 'attendance' in globals() else '#' }}"
-                    class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-50 transition">
-                    Attendance
-                </a>
-            </nav>
-
-            <div class="mt-8 border-t pt-4">
-                <a href="{{ url_for('logout') }}" class="text-sm text-red-500 hover:underline">LOGOUT</a>
-            </div>
-        </aside>
-
-        <!-- Center: User Form -->
-        <section class="lg:col-span-4 bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">USER</h2>
-
-            <form action="{{ url_for('add_user') }}" method="post" class="space-y-4">
-                {% if csrf_token %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% endif %}
-
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-                    <input id="email" name="email" type="email" required
-                        class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
-                </div>
-
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="text" required
-                        class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
-                </div>
-
-                <div class="flex gap-3">
-                    <button type="submit"
-                        class="flex-1 bg-[#1a237e] hover:bg-[#0f1a5a] text-white py-2 rounded-lg font-semibold">
-                        SAVE
-                    </button>
-                    <button type="reset"
-                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium">
-                        CANCEL
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Right: Users Table -->
-        <section class="lg:col-span-5 bg-white rounded-xl shadow-md border border-gray-200 p-6 overflow-x-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Registered Users</h2>
-                <a href="{{ url_for('register') }}"
-                    class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">ADD NEW USER</a>
-            </div>
-
-            <div class="overflow-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">ID</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">EMAIL</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">PASSWORD</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-600">ACTION</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
-                        {% for user in users %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-medium text-[#1a237e]">{{ user.id }}</td>
-                            <td class="px-4 py-3">{{ user.email }}</td>
-                            <td class="px-4 py-3">{{ user.password }}</td>
-                            <td class="px-4 py-3 text-center">
-                                <div class="inline-flex gap-2">
-                                    <button type="button"
-                                        onclick="openEditUserModal('{{ user.id }}', '{{ user.email|e }}', '{{ user.password|e }}')"
-                                        class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
-                                        aria-label="Edit user">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                            </path>
-                                        </svg>
-                                    </button>
-
-                                    <a href="{{ url_for('delete_user_route', id=user.id) }}"
-                                        class="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
-                                        onclick="return confirm('Are you sure you want to delete this user?')"
-                                        aria-label="Delete user">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="px-4 py-6 text-center text-gray-500">No users found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-</div>
-
-<!-- Edit User Modal -->
-<div id="editUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-        <div class="flex items-center justify-between px-6 py-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-800">Edit User</h3>
-            <button onclick="closeEditUserModal()" class="text-gray-500 hover:text-gray-700" aria-label="Close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-            </button>
+{% block adminContent %}
+<!-- Main Content -->
+<div class="p-3 sm:p-4 md:p-6 lg:p-8 w-full">
+    <div class="max-w-7xl mx-auto">
+        <!-- User Management Header -->
+        <div class="p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center">USER MANAGEMENT</h2>
         </div>
 
-        <form id="editUserForm" action="{{ url_for('update_user') }}" method="post" class="px-6 py-4 space-y-4">
-            {% if csrf_token %}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% endif %}
-            <input type="hidden" id="edit_user_id" name="id" value="">
-
-            <div>
-                <label for="edit_user_email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input id="edit_user_email" name="email" type="email" required
-                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- User Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white divide-gray-400 border-2 rounded-lg shadow-md p-4 sm:p-6">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4 sm:mb-6">USER</h3>
+                    <form class="space-y-3 sm:space-y-4">
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Email
+                                Address</label>
+                            <input type="email"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Password</label>
+                            <input type="password"
+                                class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                        </div>
+                        <div class="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
+                            <button type="submit"
+                                class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg border border-gray-300 transition text-sm sm:text-base">
+                                SAVE
+                            </button>
+                            <button type="button"
+                                class="flex-1 text-white bg-red-500 hover:bg-red-600 font-bold py-2 px-3 sm:px-4 rounded-lg border border-gray-300 transition text-sm sm:text-base">
+                                CANCEL
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div>
-                <label for="edit_user_password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input id="edit_user_password" name="password" type="text" required
-                    class="mt-1 block w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#162660] focus:border-[#162660]">
+            <!-- User Table -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[500px]">
+                            <thead class="bg-[#4a5568] text-white">
+                                <tr>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">ID</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">EMAIL</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold">PASSWORD
+                                    </th>
+                                    <th class="px-3 sm:px-4 py-3 text-center text-xs sm:text-sm font-semibold">ACTION
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <!-- Table rows (same as before) -->
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-blue-600 font-semibold">1000
+                                    </td>
+                                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">user1@email.com</td>
+                                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">••••••••</td>
+                                    <td class="px-3 sm:px-4 py-3">
+                                        <div class="flex justify-center gap-1 sm:gap-2">
+                                            <button
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition">
+                                                Edit
+                                            </button>
+                                            <button
+                                                class="bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- ... other rows ... -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeEditUserModal()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded">CANCEL</button>
-                <button type="submit" class="bg-[#1a237e] hover:bg-[#0f1a5a] text-white py-2 px-4 rounded">SAVE</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
-
-<script>
-    function editStudent(idno) {
-        // keep existing student edit fallback if used elsewhere
-        window.location.href = '/edit_student/' + encodeURIComponent(idno);
-    }
-
-    function openEditUserModal(id, email, password) {
-        document.getElementById('edit_user_id').value = id;
-        document.getElementById('edit_user_email').value = email;
-        document.getElementById('edit_user_password').value = password;
-
-        const modal = document.getElementById('editUserModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeEditUserModal() {
-        const modal = document.getElementById('editUserModal');
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('editUserModal');
-            if (!modal.classList.contains('hidden')) {
-                closeEditUserModal();
-            }
-        }
-    });
-</script>
 {% endblock %}
