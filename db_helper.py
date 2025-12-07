@@ -1,6 +1,5 @@
 from sqlite3 import connect, Row
 import os
-import hashlib
 
 # Ensure the db folder exists
 if not os.path.exists('db'):
@@ -9,32 +8,27 @@ if not os.path.exists('db'):
 database: str = 'db/Campus.db'
 
 
-def hash_password(password):
-    """Hash password using SHA256"""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
 def init_db():
     conn = connect(database)
     cursor = conn.cursor()
-    # Create Users Table
+    # Create Users Table (matching your schema: id, email, pass)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT 'admin'
+            pass TEXT NOT NULL
         )
     """)
-    # Create Students Table
+    # Create Students Table (matching your schema: id, idno, Lastname, Firstname, course, level, image)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS students (
-            studentId TEXT PRIMARY KEY,
-            lastName TEXT NOT NULL,
-            firstName TEXT NOT NULL,
+        CREATE TABLE IF NOT EXISTS student_account (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            idno TEXT NOT NULL UNIQUE,
+            Lastname TEXT NOT NULL,
+            Firstname TEXT NOT NULL,
             course TEXT NOT NULL,
             level INTEGER NOT NULL,
-            profile_picture TEXT
+            image TEXT
         )
     """)
     conn.commit()
@@ -58,7 +52,7 @@ def get_all_users():
     """Get all users from database"""
     conn = getprocessor()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
+    cursor.execute("SELECT * FROM user")
     rows = cursor.fetchall()
     conn.close()
     return rows
@@ -68,7 +62,7 @@ def get_user_by_id(user_id):
     """Get user by ID"""
     conn = getprocessor()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT * FROM user WHERE id = ?", (user_id,))
     user = cursor.fetchone()
     conn.close()
     return user
@@ -78,7 +72,7 @@ def get_user_by_email(email):
     """Get user by email"""
     conn = getprocessor()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    cursor.execute("SELECT * FROM user WHERE email = ?", (email,))
     user = cursor.fetchone()
     conn.close()
     return user
@@ -89,11 +83,9 @@ def add_user(user_data):
     try:
         conn = postprocess()
         cursor = conn.cursor()
-        hashed_password = hash_password(user_data['password'])
         cursor.execute(
-            "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
-            (user_data['email'], hashed_password,
-             user_data.get('role', 'admin'))
+            "INSERT INTO user (email, pass) VALUES (?, ?)",
+            (user_data['email'], user_data['password'])
         )
         conn.commit()
         conn.close()
@@ -109,14 +101,13 @@ def update_user(user_id, user_data):
         cursor = conn.cursor()
 
         if 'password' in user_data and user_data['password']:
-            hashed_password = hash_password(user_data['password'])
             cursor.execute(
-                "UPDATE users SET email = ?, password = ? WHERE id = ?",
-                (user_data['email'], hashed_password, user_id)
+                "UPDATE user SET email = ?, pass = ? WHERE id = ?",
+                (user_data['email'], user_data['password'], user_id)
             )
         else:
             cursor.execute(
-                "UPDATE users SET email = ? WHERE id = ?",
+                "UPDATE user SET email = ? WHERE id = ?",
                 (user_data['email'], user_id)
             )
 
@@ -132,7 +123,7 @@ def delete_user(user_id):
     try:
         conn = postprocess()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        cursor.execute("DELETE FROM user WHERE id = ?", (user_id,))
         conn.commit()
         conn.close()
         return True, "User deleted successfully"
@@ -144,8 +135,7 @@ def authenticate_user(email, password):
     """Authenticate user"""
     user = get_user_by_email(email)
     if user:
-        hashed_password = hash_password(password)
-        if user['password'] == hashed_password:
+        if user['pass'] == password:
             return True, user
     return False, None
 
@@ -156,17 +146,28 @@ def get_all():
     """Get all students"""
     conn = getprocessor()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM students")
+    cursor.execute("SELECT * FROM student_account")
     rows = cursor.fetchall()
     conn.close()
     return rows
 
 
 def get_student_by_id(student_id):
-    """Get student by ID"""
+    """Get student by ID (using idno)"""
     conn = getprocessor()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM students WHERE studentId = ?", (student_id,))
+    cursor.execute(
+        "SELECT * FROM student_account WHERE idno = ?", (student_id,))
+    student = cursor.fetchone()
+    conn.close()
+    return student
+
+
+def get_student_by_db_id(db_id):
+    """Get student by database ID"""
+    conn = getprocessor()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM student_account WHERE id = ?", (db_id,))
     student = cursor.fetchone()
     conn.close()
     return student
@@ -178,14 +179,14 @@ def add_record(student_data):
         conn = postprocess()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO students (studentId, lastName, firstName, course, level, profile_picture) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO student_account (idno, Lastname, Firstname, course, level, image) VALUES (?, ?, ?, ?, ?, ?)",
             (
-                student_data['studentId'],
-                student_data['lastName'],
-                student_data['firstName'],
+                student_data['idno'],
+                student_data['Lastname'],
+                student_data['Firstname'],
                 student_data['course'],
                 student_data['level'],
-                student_data.get('profile_picture')
+                student_data.get('image')
             )
         )
         conn.commit()
@@ -195,19 +196,19 @@ def add_record(student_data):
         return False, str(e)
 
 
-def update_record(student_id, student_data):
-    """Update student"""
+def update_record(student_idno, student_data):
+    """Update student by idno"""
     try:
         conn = postprocess()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE students SET lastName = ?, firstName = ?, course = ?, level = ? WHERE studentId = ?",
+            "UPDATE student_account SET Lastname = ?, Firstname = ?, course = ?, level = ? WHERE idno = ?",
             (
-                student_data['lastName'],
-                student_data['firstName'],
+                student_data['Lastname'],
+                student_data['Firstname'],
                 student_data['course'],
                 student_data['level'],
-                student_id
+                student_idno
             )
         )
         conn.commit()
@@ -217,13 +218,50 @@ def update_record(student_id, student_data):
         return False, str(e)
 
 
-def delete_record(student_id):
-    """Delete student"""
+def update_record_by_id(db_id, student_data):
+    """Update student by database ID"""
     try:
         conn = postprocess()
         cursor = conn.cursor()
         cursor.execute(
-            "DELETE FROM students WHERE studentId = ?", (student_id,))
+            "UPDATE student_account SET idno = ?, Lastname = ?, Firstname = ?, course = ?, level = ? WHERE id = ?",
+            (
+                student_data['idno'],
+                student_data['Lastname'],
+                student_data['Firstname'],
+                student_data['course'],
+                student_data['level'],
+                db_id
+            )
+        )
+        conn.commit()
+        conn.close()
+        return True, "Student updated successfully"
+    except Exception as e:
+        return False, str(e)
+
+
+def delete_record(student_idno):
+    """Delete student by idno"""
+    try:
+        conn = postprocess()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM student_account WHERE idno = ?", (student_idno,))
+        conn.commit()
+        conn.close()
+        return True, "Student deleted successfully"
+    except Exception as e:
+        return False, str(e)
+
+
+def delete_record_by_id(db_id):
+    """Delete student by database ID"""
+    try:
+        conn = postprocess()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM student_account WHERE id = ?", (db_id,))
         conn.commit()
         conn.close()
         return True, "Student deleted successfully"
