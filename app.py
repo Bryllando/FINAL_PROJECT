@@ -80,6 +80,29 @@ def index():
     return render_template('index.html')
 
 
+# Student Management Route - Shows the table of students
+@app.route('/student-management')
+@login_required
+def student_management():
+    students = db_helper.get_all()
+    return render_template('dashboard/Student_mngt.html', students=students)
+
+
+# NEW: Student Form Route - For adding/editing students
+@app.route('/student')
+@login_required
+def student():
+    return render_template('dashboard/Student.html')
+
+
+# Attendance Route - Just for attendance tracking
+@app.route('/attendance')
+@login_required
+def attendance():
+    students = db_helper.get_all()
+    return render_template('dashboard/attendance.html', students=students)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # If user is already logged in, redirect to admin
@@ -215,7 +238,10 @@ def admin():
     students = db_helper.get_all()
     users = db_helper.get_all_users()
     # Admin UI is located at templates/dashboard/admin.html
-    return render_template('dashboard/admin.html', student_account=students, users=users)
+    return render_template('dashboard/admin.html',
+                           student_account=students,
+                           users=users,
+                           students=students)
 
 
 @app.route('/logout')
@@ -304,10 +330,11 @@ def add_student():
 
     if success:
         flash('Student added successfully!', 'success')
+        # Redirect back to student management page
+        return redirect(url_for('student_management'))
     else:
         flash(f'Failed to add student: {message}', 'error')
-
-    return redirect(url_for('admin'))
+        return redirect(url_for('student'))
 
 
 @app.route('/save_student', methods=['POST'])
@@ -325,10 +352,10 @@ def save_student():
 
     if success:
         flash('Student updated successfully!', 'success')
+        return redirect(url_for('student_management'))
     else:
         flash(f'Failed to update student: {message}', 'error')
-
-    return redirect(url_for('admin'))
+        return redirect(url_for('student'))
 
 
 @app.route('/delete_student/<student_id>')
@@ -341,7 +368,7 @@ def delete_student(student_id):
     else:
         flash(f'Failed to delete student: {message}', 'error')
 
-    return redirect(url_for('admin'))
+    return redirect(url_for('student_management'))
 
 
 # API routes

@@ -51,7 +51,8 @@
         <aside id="sidebar"
             class="bg-[#4a5568] w-64 fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out z-40 flex flex-col pt-14 sm:pt-16 shadow-lg">
             <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
-                <a href="#" data-page="users"
+                <!-- MODIFIED: Changed href to use Flask url_for and removed data-page -->
+                <a href="{{ url_for('admin') }}"
                     class="flex items-center gap-3 px-4 py-3 text-white hover:bg-[#3182ce] rounded-lg font-medium transition text-sm">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -59,7 +60,8 @@
                     </svg>
                     Users Account
                 </a>
-                <a href="#" data-page="studentManagement"
+                <!-- MODIFIED: Changed href to use Flask url_for for student_management route -->
+                <a href="{{ url_for('student_management') }}"
                     class="flex items-center gap-3 px-4 py-3 text-white hover:bg-[#3182ce] rounded-lg font-medium transition text-sm">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -68,7 +70,8 @@
                     Student Management
                 </a>
 
-                <a href="#" data-page="attendance"
+                <!-- MODIFIED: Changed href to use Flask url_for for attendance route -->
+                <a href="{{ url_for('attendance') }}"
                     class="flex items-center gap-3 px-4 py-3 text-white hover:bg-[#3182ce] rounded-lg font-medium transition text-sm">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -95,26 +98,19 @@
         <div id="overlay" class="fixed inset-0 bg-opacity-50 z-30 hidden"></div>
 
         <!-- Main Content Area -->
+        <!-- MODIFIED: Removed the hidden divs and simplified to show the active content block -->
         <div class="flex-1 overflow-y-auto">
-            <!-- User Management Content -->
-            <div id="adminContent">
-                {% block admin_Content %}{% endblock %}
-            </div>
+            <!-- User Management Content (admin.html) -->
+            {% block admin_Content %}{% endblock %}
 
             <!-- Student Management Content (Student_mngt.html) -->
-            <div id="StudentManagementContent" class="hidden">
-                {% block StudentManagementContent %}{% endblock %}
-            </div>
+            {% block StudentManagementContent %}{% endblock %}
 
             <!-- Add Student Form Content (Student.html) -->
-            <div id="StudentContent" class="hidden">
-                {% block StudentContent %}{% endblock %}
-            </div>
+            {% block StudentContent %}{% endblock %}
 
             <!-- Attendance Content -->
-            <div id="attendanceContent" class="hidden">
-                {% block attendanceContent %}{% endblock %}
-            </div>
+            {% block attendanceContent %}{% endblock %}
         </div>
     </div>
 
