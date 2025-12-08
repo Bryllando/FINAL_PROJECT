@@ -3,139 +3,214 @@
 {% block StudentContent %}
 <!-- Main Content -->
 <main class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 w-full">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">STUDENT INFORMATION</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Left Side: Camera View and Result -->
-                <div class="space-y-6">
-                    <!-- Camera and Result Section -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Camera View -->
-                        <div class="flex flex-col items-center">
-                            <div
-                                class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden mb-2 border-4 border-gray-300">
-                                <video id="video" class="w-full h-full object-cover hidden"></video>
-                                <img id="uploadedImage" class="w-full h-full object-cover hidden" />
-                                <svg id="cameraPlaceholder" class="w-16 h-16 text-gray-400" fill="currentColor"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                        clip-rule="evenodd" />
-                                </svg>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Side: Camera Section -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4 text-center">Profile Photo</h3>
+
+                        <!-- Camera Preview Area -->
+                        <div class="mb-4">
+                            <div id="camera-container"
+                                class="w-full aspect-square bg-gray-300 rounded-lg flex items-center justify-center overflow-hidden border-4 border-gray-400 relative"
+                                style="max-height: 400px;">
+                                <!-- WebcamJS will attach here -->
+                                <div id="cameraPlaceholder"
+                                    class="text-center absolute inset-0 flex flex-col items-center justify-center">
+                                    <svg class="w-20 h-20 text-gray-500 mx-auto mb-2" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    <p class="text-sm text-gray-500">Camera Off</p>
+                                </div>
                             </div>
-                            <span class="text-xs text-gray-600 font-medium">Camera View</span>
                         </div>
 
-                        <!-- Result Picture -->
-                        <div class="flex flex-col items-center">
-                            <div
-                                class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden mb-2 border-4 border-gray-300">
-                                <canvas id="canvas" class="hidden"></canvas>
-                                <img id="capturedPhoto" class="w-full h-full object-cover hidden" />
-                                <svg id="photoPlaceholder" class="w-16 h-16 text-gray-400" fill="currentColor"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                        clip-rule="evenodd" />
+                        <!-- Camera Controls -->
+                        <div class="space-y-2">
+                            <!-- Start/Stop Camera Button -->
+                            <button id="cameraBtn" type="button"
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
+                                <span id="cameraBtnText">Start Camera</span>
+                            </button>
+
+                            <!-- Take Snapshot Button (Hidden by default) -->
+                            <button id="captureBtn" type="button"
+                                class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 hidden">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Take Snapshot
+                            </button>
+
+                            <!-- Retake Button (Hidden by default) -->
+                            <button id="retakeBtn" type="button"
+                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 hidden">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Retake Photo
+                            </button>
+
+                            <!-- Divider -->
+                            <div class="relative my-4">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div class="relative flex justify-center text-sm">
+                                    <span class="px-2 bg-gray-50 text-gray-500">OR</span>
+                                </div>
                             </div>
-                            <span class="text-xs text-gray-600 font-medium">Result</span>
+
+                            <!-- Upload Image Button -->
+                            <label for="fileUpload"
+                                class="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                <span>Upload from Device</span>
+                                <input type="file" id="fileUpload" accept="image/*" class="hidden">
+                            </label>
+                        </div>
+
+                        <!-- Photo Preview (Captured/Uploaded Photo) -->
+                        <div id="photoPreviewSection" class="mt-4 hidden">
+                            <p class="text-sm font-semibold text-gray-700 mb-2 text-center">Preview</p>
+                            <div
+                                class="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden border-4 border-green-400">
+                                <img id="photoPreview" class="w-full h-full object-cover" />
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Photo Capture Options -->
-                    <div class="flex gap-3">
-                        <button id="cameraBtn" type="button"
-                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span id="cameraBtnText">Camera Off</span>
-                        </button>
-
-                        <label for="fileUpload"
-                            class="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>Upload Image</span>
-                            <input type="file" id="fileUpload" accept="image/*" class="hidden">
-                        </label>
-                    </div>
-
                 </div>
 
                 <!-- Right Side: Student Details Form -->
-                <div class="space-y-4">
-                    <!-- Profile Icon -->
-                    <div class="flex justify-center mb-4">
-                        <div
-                            class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300">
-                            <img id="profileIcon" class="w-full h-full object-cover rounded-full hidden" />
-                            <svg id="profilePlaceholder" class="w-16 h-16 text-gray-400" fill="currentColor"
-                                viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- MODIFIED: Fixed form attributes and field names -->
+                <div class="lg:col-span-2">
                     <form id="studentForm" action="/add_student" method="POST" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">ID NO</label>
-                            <input type="text" id="studentId" name="idno" placeholder="Enter ID" required
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                        <!-- Hidden field for image data -->
+                        <input type="hidden" id="imageData" name="image_data">
+
+                        <!-- Profile Icon Display -->
+                        <div class="flex justify-center mb-6">
+                            <div class="relative">
+                                <div
+                                    class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300 overflow-hidden">
+                                    <img id="profileIcon" class="w-full h-full object-cover hidden" />
+                                    <svg id="profilePlaceholder" class="w-16 h-16 text-gray-400" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div id="profileBadge"
+                                    class="hidden absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">LASTNAME</label>
-                            <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
+                        <!-- Student Information Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    ID NUMBER <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="studentId" name="idno" placeholder="Enter Student ID" required
+                                    class="w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    LAST NAME <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required
+                                    class="w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    FIRST NAME <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="firstName" name="firstName" placeholder="Enter First Name"
+                                    required
+                                    class="w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    COURSE <span class="text-red-500">*</span>
+                                </label>
+                                <select id="course" name="course" required
+                                    class="w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                    <option value="">Select Course</option>
+                                    <option value="BSIT">BSIT</option>
+                                    <option value="BSCS">BSCS</option>
+                                    <option value="BSIS">BSIS</option>
+                                    <option value="ACT">ACT</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    YEAR LEVEL <span class="text-red-500">*</span>
+                                </label>
+                                <select id="level" name="level" required
+                                    class="w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                    <option value="">Select Level</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">FIRSTNAME</label>
-                            <input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
-                        </div>
+                        <!-- QR Code Section -->
+                        <div id="qrCodeSection" class="hidden bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                                Student QR Code
+                            </h3>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">COURSE</label>
-                            <select id="course" name="course" required
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
-                                <option value="">Select Course</option>
-                                <option value="BSIT">BSIT</option>
-                                <option value="BSCS">BSCS</option>
-                                <option value="BSIS">BSIS</option>
-                                <option value="ACT">ACT</option>
-                            </select>
-                        </div>
+                            <div class="flex flex-col items-center gap-4">
+                                <!-- QR Code Container -->
+                                <div id="qrCodeContainer" class="bg-white p-4 rounded-lg border-2 border-gray-200">
+                                </div>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">LEVEL</label>
-                            <select id="level" name="level" required
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#162660] focus:border-[#162660] transition">
-                                <option value="">Select Level</option>
-                                <option value="1st Year">1st Year</option>
-                                <option value="2nd Year">2nd Year</option>
-                                <option value="3rd Year">3rd Year</option>
-                                <option value="4th Year">4th Year</option>
-                            </select>
-                        </div>
+                                <!-- QR Code Info -->
+                                <div class="text-center">
+                                    <p class="text-sm text-gray-600">Scan this QR code for quick student identification
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-1">QR Code contains: Student ID Number</p>
+                                </div>
 
-                        <!-- QR Code Display Area -->
-                        <div id="qrCodeContainer" class="hidden border-t pt-4 mt-4">
-                            <div class="flex flex-col items-center space-y-3">
-                                <p class="text-sm font-semibold text-gray-700">Generated QR Code</p>
-                                <div id="qrcode" class="bg-white p-3 rounded-lg border-2 border-gray-300"></div>
-                                <button type="button" id="downloadQR"
-                                    class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg transition flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Download QR Code Button -->
+                                <button type="button" onclick="downloadQRCode()"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
@@ -144,18 +219,19 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-3 pt-4">
+                        <!-- Form Action Buttons -->
+                        <div class="flex gap-3 pt-6">
                             <button type="button" id="cancelBtn"
-                                class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2.5 px-4 rounded-lg transition">
+                                class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg transition">
                                 CANCEL
                             </button>
                             <button type="submit" id="submitBtn"
-                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
-                                SAVE
+                                SAVE STUDENT
                             </button>
                         </div>
                     </form>
@@ -165,6 +241,136 @@
     </div>
 </main>
 
-<!-- MODIFIED: Added JavaScript file reference -->
+
+<!-- Custom styles for webcam -->
+<style>
+    /* Camera Container Styles - HD Quality Layout */
+    #camera-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        max-height: 400px;
+        background-color: #d1d5db;
+        border-radius: 0.5rem;
+        border: 4px solid #9ca3af;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Webcam video element - fills entire container */
+    #camera-container video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Camera placeholder when off */
+    #cameraPlaceholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    /* Photo preview section */
+    #photoPreviewSection.hidden,
+    #profileIcon.hidden,
+    #profilePlaceholder.hidden,
+    #profileBadge.hidden,
+    .hidden {
+        display: none !important;
+    }
+
+    /* HD Photo Preview - No Stretching */
+    #photoPreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    /* Profile Icon - HD Quality, No Stretching */
+    #profileIcon {
+        width: 100%;
+        height: 100%;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+
+    /* Profile Icon Container */
+    .w-32.h-32.bg-gray-200.rounded-full {
+        width: 8rem;
+        height: 8rem;
+        min-width: 8rem;
+        min-height: 8rem;
+    }
+
+    /* Ensure no extra spacing in camera container */
+    #camera-container>div:not(#cameraPlaceholder) {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    /* Fix for any flash content */
+    #camera-container object,
+    #camera-container embed {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    /* Disabled button state */
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+    }
+
+    button:disabled:hover {
+        background-color: inherit !important;
+    }
+
+    /* Image preview in Student Management */
+    #imageDisplay {
+        width: 100%;
+        height: 100%;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+
+    /* Ensure rounded containers maintain aspect ratio */
+    .rounded-full {
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .rounded-full img {
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+</style>
+
+<script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
+<!-- Load WebcamJS library first -->
+<script src="{{ url_for('static', filename='js/webcam.min.js') }}"></script>
+<!-- Then load our custom camera script -->
+<script src="{{ url_for('static', filename='js/student-camera.js') }}"></script>
+<!-- Load admin & student management script -->
 <script src="{{ url_for('static', filename='js/admin&student.js') }}"></script>
 {% endblock %}

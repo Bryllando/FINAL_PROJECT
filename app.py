@@ -1,12 +1,30 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
+from datetime import datetime
 import db_helper
 import re
+import os
+import base64
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 
-# Login required decorator
+# Configure upload folder
+UPLOAD_FOLDER = 'static/images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Ensure upload folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# FIXED: Increase max content length to handle images (16MB)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def login_required(f):
@@ -55,7 +73,6 @@ def check_password_strength(password):
     else:
         feedback.append("One special character")
 
-    # Determine strength level
     if score <= 2:
         strength = "weak"
     elif score <= 3:
@@ -72,15 +89,62 @@ def check_password_strength(password):
     }
 
 
+# FIXED: Helper function to save base64 image
+def save_base64_image(image_data, student_id):
+    """Save base64 image and return relative path"""
+    try:
+        # Check if it's a base64 image
+        if image_data.startswith('data:image'):
+            # Extract format and base64 data
+            if ';base64,' in image_data:
+                # Get image format (jpeg, png, etc.)
+                format_part = image_data.split(';')[0].split('/')[-1]
+                image_data = image_data.split('base64,')[1]
+            else:
+                format_part = 'jpeg'
+
+            # Decode base64
+            image_binary = base64.b64decode(image_data)
+
+            # Generate filename with proper extension
+            ext = 'jpg' if format_part == 'jpeg' else format_part
+            filename = secure_filename(
+                f"{student_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+            )
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+            # Save file
+            with open(filepath, 'wb') as f:
+                f.write(image_binary)
+
+            # Return relative path
+            image_path = f"images/{filename}"
+            print(
+                f"Image saved successfully: {image_path}, size: {len(image_binary)} bytes")
+            return image_path
+
+        elif image_data.startswith('/static/'):
+            # It's an existing image path from the server
+            return image_data.replace('/static/', '')
+
+        elif image_data.startswith('images/'):
+            # Already in correct format
+            return image_data
+
+    except Exception as e:
+        print(f"Error saving image: {e}")
+        raise
+
+    return None
+
+
 @app.route('/')
 def index():
-    # If user is already logged in, redirect to admin (main landing)
     if 'user_id' in session:
         return redirect(url_for('admin'))
     return render_template('index.html')
 
 
-# Student Management Route - Shows the table of students
 @app.route('/student-management')
 @login_required
 def student_management():
@@ -88,14 +152,12 @@ def student_management():
     return render_template('dashboard/Student_mngt.html', students=students)
 
 
-# NEW: Student Form Route - For adding/editing students
 @app.route('/student')
 @login_required
 def student():
     return render_template('dashboard/Student.html')
 
 
-# Attendance Route - Just for attendance tracking
 @app.route('/attendance')
 @login_required
 def attendance():
@@ -105,7 +167,6 @@ def attendance():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # If user is already logged in, redirect to admin
     if 'user_id' in session:
         return redirect(url_for('admin'))
 
@@ -113,12 +174,10 @@ def login():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
 
-        # Validate inputs
         if not email or not password:
             flash('Please enter both email and password', 'error')
             return render_template('auth/login.html')
 
-        # Validate email format
         if not validate_email(email):
             flash('Please enter a valid email address', 'error')
             return render_template('auth/login.html')
@@ -129,7 +188,6 @@ def login():
             session['user_id'] = user['id']
             session['email'] = user['email']
             flash('Login successful! Welcome back.', 'success')
-            # Redirect to the admin page which renders dashboard/admin.html
             return redirect(url_for('admin'))
         else:
             flash('Invalid email or password. Please try again.', 'error')
@@ -139,7 +197,6 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # If user is already logged in, redirect to admin
     if 'user_id' in session:
         return redirect(url_for('admin'))
 
@@ -148,29 +205,24 @@ def register():
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
 
-        # Validate inputs
         if not email or not password or not confirm_password:
             flash('All fields are required', 'error')
             return render_template('auth/register.html')
 
-        # Validate email format
         if not validate_email(email):
             flash('Please enter a valid email address', 'error')
             return render_template('auth/register.html')
 
-        # Check if passwords match
         if password != confirm_password:
             flash('Passwords do not match', 'error')
             return render_template('auth/register.html')
 
-        # Check password strength
         strength_check = check_password_strength(password)
         if strength_check['score'] < 3:
             flash(
                 f'Password is too weak. Please include: {", ".join(strength_check["feedback"])}', 'error')
             return render_template('auth/register.html')
 
-        # Check if email already exists
         existing_user = db_helper.get_user_by_email(email)
         if existing_user:
             flash('Email already exists. Please use a different email or login.', 'error')
@@ -193,7 +245,6 @@ def register():
     return render_template('auth/register.html')
 
 
-# API endpoint for email validation
 @app.route('/api/check_email', methods=['POST'])
 def check_email():
     data = request.get_json()
@@ -212,7 +263,6 @@ def check_email():
     return jsonify({'available': True, 'message': 'Email is available'})
 
 
-# API endpoint for password strength check
 @app.route('/api/check_password_strength', methods=['POST'])
 def check_password_strength_api():
     data = request.get_json()
@@ -222,22 +272,17 @@ def check_password_strength_api():
     return jsonify(result)
 
 
-# Dashboard route (kept for compatibility) -> redirect to admin
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Redirect to admin as admin is the main landing page/template
     return redirect(url_for('admin'))
 
 
-# Admin route that renders the admin template file
 @app.route('/admin')
 @login_required
 def admin():
-    # Get all students and users for the admin view
     students = db_helper.get_all()
     users = db_helper.get_all_users()
-    # Admin UI is located at templates/dashboard/admin.html
     return render_template('dashboard/admin.html',
                            student_account=students,
                            users=users,
@@ -256,7 +301,6 @@ def scan():
     return render_template('index.html')
 
 
-# User management routes
 @app.route('/add_user', methods=['POST'])
 @login_required
 def add_user():
@@ -313,26 +357,56 @@ def delete_user_route(id):
     return redirect(url_for('admin'))
 
 
-# Student management routes
+# ============================================
+# FIXED STUDENT MANAGEMENT ROUTES
+# ============================================
+
 @app.route('/add_student', methods=['POST'])
 @login_required
 def add_student():
+    """Add new student with compressed image handling"""
+    image_path = None
+    image_data = request.form.get('image_data')
+
+    if not image_data:
+        flash('Profile photo is required', 'error')
+        return redirect(url_for('student'))
+
+    try:
+        student_id = request.form.get('idno')
+        image_path = save_base64_image(image_data, student_id)
+
+        if not image_path:
+            flash('Error saving profile photo', 'error')
+            return redirect(url_for('student'))
+
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        flash('Error saving profile photo', 'error')
+        return redirect(url_for('student'))
+
     student_data = {
         'idno': request.form.get('idno'),
         'Lastname': request.form.get('lastName'),
         'Firstname': request.form.get('firstName'),
         'course': request.form.get('course'),
         'level': request.form.get('level'),
-        'image': None
+        'image': image_path
     }
 
     success, message = db_helper.add_record(student_data)
 
     if success:
         flash('Student added successfully!', 'success')
-        # Redirect back to student management page
         return redirect(url_for('student_management'))
     else:
+        # Delete uploaded image if database insert fails
+        if image_path and image_path.startswith('images/'):
+            try:
+                os.remove(os.path.join('static', image_path))
+            except Exception as e:
+                print(f"Error deleting image: {e}")
+
         flash(f'Failed to add student: {message}', 'error')
         return redirect(url_for('student'))
 
@@ -340,12 +414,51 @@ def add_student():
 @app.route('/save_student', methods=['POST'])
 @login_required
 def save_student():
+    """Update existing student with compressed image handling"""
     student_id = request.form.get('idno')
+
+    # Get existing student
+    existing_student = db_helper.get_student_by_id(student_id)
+    image_path = existing_student['image'] if existing_student else None
+
+    # Handle image data
+    image_data = request.form.get('image_data')
+
+    if image_data:
+        try:
+            # Check if it's a new image or existing path
+            if image_data.startswith('data:image'):
+                # New image - delete old one first
+                if image_path and image_path.startswith('images/'):
+                    old_filepath = os.path.join('static', image_path)
+                    if os.path.exists(old_filepath):
+                        try:
+                            os.remove(old_filepath)
+                            print(f"Deleted old image: {old_filepath}")
+                        except Exception as e:
+                            print(f"Error deleting old image: {e}")
+
+                # Save new compressed image
+                image_path = save_base64_image(image_data, student_id)
+
+            elif image_data.startswith('/static/'):
+                # Existing image path
+                image_path = image_data.replace('/static/', '')
+
+            elif image_data.startswith('images/'):
+                # Already in correct format
+                image_path = image_data
+
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            flash('Error saving profile photo', 'error')
+
     student_data = {
-        'Lastname': request.form.get('lastname'),
-        'Firstname': request.form.get('firstname'),
+        'Lastname': request.form.get('lastName'),
+        'Firstname': request.form.get('firstName'),
         'course': request.form.get('course'),
-        'level': request.form.get('level')
+        'level': request.form.get('level'),
+        'image': image_path
     }
 
     success, message = db_helper.update_record(student_id, student_data)
@@ -361,6 +474,17 @@ def save_student():
 @app.route('/delete_student/<student_id>')
 @login_required
 def delete_student(student_id):
+    """Delete student and their image file"""
+    student = db_helper.get_student_by_id(student_id)
+    if student and student['image']:
+        image_path = os.path.join('static', student['image'])
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+                print(f"Deleted image: {image_path}")
+            except Exception as e:
+                print(f"Error deleting image: {e}")
+
     success, message = db_helper.delete_record(student_id)
 
     if success:
@@ -371,9 +495,9 @@ def delete_student(student_id):
     return redirect(url_for('student_management'))
 
 
-# API routes
 @app.route('/api/student/<student_id>')
 def get_student(student_id):
+    """Get student details by ID"""
     student = db_helper.get_student_by_id(student_id)
     if student:
         return jsonify({
@@ -381,6 +505,67 @@ def get_student(student_id):
             'student': dict(student)
         })
     return jsonify({'success': False, 'message': 'Student not found'}), 404
+
+
+@app.route('/api/attendance/<date>')
+@login_required
+def get_attendance(date):
+    """Get attendance for a specific date"""
+    try:
+        attendance_records = db_helper.get_attendance_by_date(date)
+        stats = db_helper.get_attendance_stats(date)
+
+        return jsonify({
+            'success': True,
+            'attendance': [dict(row) for row in attendance_records],
+            'stats': stats
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/attendance/mark', methods=['POST'])
+@login_required
+def mark_attendance():
+    """Mark attendance for a student"""
+    try:
+        data = request.get_json()
+        student_idno = data.get('student_idno')
+        date = data.get('date')
+        time_in = data.get('time_in')
+        status = data.get('status', 'PRESENT')
+
+        success, message = db_helper.mark_attendance(
+            student_idno, date, time_in, status)
+
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': message}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/attendance/update_status', methods=['POST'])
+@login_required
+def update_attendance_status():
+    """Update attendance status"""
+    try:
+        data = request.get_json()
+        student_idno = data.get('student_idno')
+        date = data.get('date')
+        status = data.get('status')
+        time_out = data.get('time_out')
+
+        success, message = db_helper.update_attendance_status(
+            student_idno, date, status, time_out)
+
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': message}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 if __name__ == '__main__':

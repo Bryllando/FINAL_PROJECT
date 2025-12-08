@@ -1,5 +1,6 @@
 from sqlite3 import connect, Row
 import os
+from datetime import datetime
 
 # Ensure the db folder exists
 if not os.path.exists('db'):
@@ -11,7 +12,7 @@ database: str = 'db/Campus.db'
 def init_db():
     conn = connect(database)
     cursor = conn.cursor()
-    # Create Users Table (matching your schema: id, email, pass)
+    # Create Users Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +20,7 @@ def init_db():
             pass TEXT NOT NULL
         )
     """)
-    # Create Students Table (matching your schema: id, idno, Lastname, Firstname, course, level, image)
+    # Create Students Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS student_account (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,6 +30,19 @@ def init_db():
             course TEXT NOT NULL,
             level INTEGER NOT NULL,
             image TEXT
+        )
+    """)
+    # Create Attendance Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_idno TEXT NOT NULL,
+            date DATE NOT NULL,
+            time_in TEXT,
+            time_out TEXT,
+            status TEXT NOT NULL DEFAULT 'ABSENT',
+            FOREIGN KEY (student_idno) REFERENCES student_account(idno),
+            UNIQUE(student_idno, date)
         )
     """)
     conn.commit()
@@ -163,16 +177,6 @@ def get_student_by_id(student_id):
     return student
 
 
-def get_student_by_db_id(db_id):
-    """Get student by database ID"""
-    conn = getprocessor()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM student_account WHERE id = ?", (db_id,))
-    student = cursor.fetchone()
-    conn.close()
-    return student
-
-
 def add_record(student_data):
     """Add new student"""
     try:
@@ -197,41 +201,21 @@ def add_record(student_data):
 
 
 def update_record(student_idno, student_data):
-    """Update student by idno"""
+    """Update student by idno - FIXED: Now includes image update"""
     try:
         conn = postprocess()
         cursor = conn.cursor()
+
+        # FIXED: Include image in update
         cursor.execute(
-            "UPDATE student_account SET Lastname = ?, Firstname = ?, course = ?, level = ? WHERE idno = ?",
+            "UPDATE student_account SET Lastname = ?, Firstname = ?, course = ?, level = ?, image = ? WHERE idno = ?",
             (
                 student_data['Lastname'],
                 student_data['Firstname'],
                 student_data['course'],
                 student_data['level'],
+                student_data.get('image'),
                 student_idno
-            )
-        )
-        conn.commit()
-        conn.close()
-        return True, "Student updated successfully"
-    except Exception as e:
-        return False, str(e)
-
-
-def update_record_by_id(db_id, student_data):
-    """Update student by database ID"""
-    try:
-        conn = postprocess()
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE student_account SET idno = ?, Lastname = ?, Firstname = ?, course = ?, level = ? WHERE id = ?",
-            (
-                student_data['idno'],
-                student_data['Lastname'],
-                student_data['Firstname'],
-                student_data['course'],
-                student_data['level'],
-                db_id
             )
         )
         conn.commit()
@@ -254,19 +238,138 @@ def delete_record(student_idno):
     except Exception as e:
         return False, str(e)
 
+# --- ATTENDANCE FUNCTIONS ---
 
-def delete_record_by_id(db_id):
-    """Delete student by database ID"""
+
+def get_attendance_by_date(date):
+    """Get all attendance records for a specific date with student info"""
+    conn = getprocessor()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            s.idno,
+            s.Lastname,
+            s.Firstname,
+            s.course,
+            s.level,
+            COALESCE(a.time_in, '') as time_in,
+            COALESCE(a.time_out, '') as time_out,
+            COALESCE(a.status, 'ABSENT') as status
+        FROM student_account s
+        LEFT JOIN attendance a ON s.idno = a.student_idno AND a.date = ?
+        ORDER BY s.Lastname, s.Firstname
+    """, (date,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+
+def mark_attendance(student_idno, date, time_in, status):
+    """Mark or update attendance for a student"""
     try:
         conn = postprocess()
         cursor = conn.cursor()
+
         cursor.execute(
-            "DELETE FROM student_account WHERE id = ?", (db_id,))
+            "SELECT id FROM attendance WHERE student_idno = ? AND date = ?",
+            (student_idno, date)
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute(
+                "UPDATE attendance SET time_in = ?, status = ? WHERE student_idno = ? AND date = ?",
+                (time_in, status, student_idno, date)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO attendance (student_idno, date, time_in, status) VALUES (?, ?, ?, ?)",
+                (student_idno, date, time_in, status)
+            )
+
         conn.commit()
         conn.close()
-        return True, "Student deleted successfully"
+        return True, "Attendance marked successfully"
     except Exception as e:
         return False, str(e)
+
+
+def update_attendance_status(student_idno, date, status, time_in=None, time_out=None):
+    """Update attendance status and optionally time in/out"""
+    try:
+        conn = postprocess()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id FROM attendance WHERE student_idno = ? AND date = ?",
+            (student_idno, date)
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            if time_in and time_out:
+                cursor.execute(
+                    "UPDATE attendance SET status = ?, time_in = ?, time_out = ? WHERE student_idno = ? AND date = ?",
+                    (status, time_in, time_out, student_idno, date)
+                )
+            elif time_in:
+                cursor.execute(
+                    "UPDATE attendance SET status = ?, time_in = ? WHERE student_idno = ? AND date = ?",
+                    (status, time_in, student_idno, date)
+                )
+            elif time_out:
+                cursor.execute(
+                    "UPDATE attendance SET status = ?, time_out = ? WHERE student_idno = ? AND date = ?",
+                    (status, time_out, student_idno, date)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE attendance SET status = ? WHERE student_idno = ? AND date = ?",
+                    (status, student_idno, date)
+                )
+        else:
+            cursor.execute(
+                "INSERT INTO attendance (student_idno, date, status, time_in) VALUES (?, ?, ?, ?)",
+                (student_idno, date, status, time_in)
+            )
+
+        conn.commit()
+        conn.close()
+        return True, "Attendance updated successfully"
+    except Exception as e:
+        return False, str(e)
+
+
+def get_attendance_stats(date):
+    """Get attendance statistics for a specific date"""
+    conn = getprocessor()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) as total FROM student_account")
+    total = cursor.fetchone()['total']
+
+    cursor.execute(
+        "SELECT COUNT(*) as count FROM attendance WHERE date = ? AND status = 'PRESENT'",
+        (date,)
+    )
+    present = cursor.fetchone()['count']
+
+    cursor.execute(
+        "SELECT COUNT(*) as count FROM attendance WHERE date = ? AND status = 'LATE'",
+        (date,)
+    )
+    late = cursor.fetchone()['count']
+
+    absent = total - present - late
+
+    conn.close()
+
+    return {
+        'total': total,
+        'present': present,
+        'late': late,
+        'absent': absent
+    }
 
 
 # Initialize DB on first run

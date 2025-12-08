@@ -123,49 +123,6 @@
     </div>
 </main>
 
-<!-- Status Change Modal -->
-<div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 transform transition-all">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Change Attendance Status</h3>
-        <p class="text-sm text-gray-600 mb-4">Select new status for <span id="modalStudentName"
-                class="font-semibold"></span>:</p>
-
-        <div class="space-y-2">
-            <button onclick="changeStatus('PRESENT')"
-                class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                PRESENT
-            </button>
-
-            <button onclick="changeStatus('LATE')"
-                class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                LATE
-            </button>
-
-            <button onclick="changeStatus('ABSENT')"
-                class="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                ABSENT
-            </button>
-        </div>
-
-        <button onclick="closeModal()"
-            class="w-full mt-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition">
-            Cancel
-        </button>
-    </div>
-</div>
-
-<!-- MODIFIED: Added JavaScript file reference -->
+<!-- JavaScript file reference -->
 <script src="{{ url_for('static', filename='js/admin&student.js') }}"></script>
 {% endblock %}
