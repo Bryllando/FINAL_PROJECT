@@ -50,7 +50,7 @@ function startScanner() {
 
     const config = {
         fps: 10,
-        qrbox: { width: 450, height: 450 }, // Extra large scan area for easier scanning
+        qrbox: { width: 350, height: 350 }, // Extra large scan area for easier scanning
         aspectRatio: 1.0
     };
 

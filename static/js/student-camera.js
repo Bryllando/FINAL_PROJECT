@@ -1,5 +1,5 @@
 // ============================================
-// STUDENT CAMERA & QR FUNCTIONALITY
+// STUDENT CAMERA & QR FUNCTIONALITY - FIXED EDIT MODE
 // ============================================
 
 // Global Variables
@@ -7,6 +7,7 @@ let cameraActive = false;
 let capturedImageData = null;
 let currentQRCode = null;
 let currentStudentId = null;
+let isEditMode = false; // Track if we're in edit mode
 
 // Initialize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
@@ -282,9 +283,6 @@ function updateImagePreview(dataUri) {
 // QR CODE GENERATION AND DOWNLOAD
 // ============================================
 
-/**
- * Generate QR Code for student ID
- */
 function generateQRCode(studentId) {
     if (!studentId) {
         console.warn('No student ID provided for QR generation');
@@ -323,9 +321,6 @@ function generateQRCode(studentId) {
     console.log('✅ QR Code generated successfully');
 }
 
-/**
- * Download QR Code as PNG with white background
- */
 function downloadQRCode() {
     if (!currentStudentId) {
         alert('Please generate a QR code first by filling in the student ID');
@@ -350,25 +345,17 @@ function downloadQRCode() {
     }
 }
 
-/**
- * Download from canvas (adds white border/padding)
- * UPDATED: Creates a larger canvas to include a white margin
- */
 function downloadFromCanvas(originalCanvas) {
     try {
-        const padding = 25; // 25px white border
+        const padding = 25;
         const canvas = document.createElement('canvas');
 
-        // Make new canvas larger than original to accommodate padding
         canvas.width = originalCanvas.width + (padding * 2);
         canvas.height = originalCanvas.height + (padding * 2);
         const ctx = canvas.getContext('2d');
 
-        // Fill entire canvas with white background
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw the QR code in the center (offset by padding)
         ctx.drawImage(originalCanvas, padding, padding);
 
         const dataURL = canvas.toDataURL('image/png');
@@ -379,28 +366,20 @@ function downloadFromCanvas(originalCanvas) {
     }
 }
 
-/**
- * Download from image (adds white border/padding)
- * UPDATED: Creates a larger canvas to include a white margin
- */
 function downloadFromImage(img) {
     try {
-        const padding = 25; // 25px white border
+        const padding = 25;
         const canvas = document.createElement('canvas');
 
         const imgWidth = img.width || 256;
         const imgHeight = img.height || 256;
 
-        // Make new canvas larger than original to accommodate padding
         canvas.width = imgWidth + (padding * 2);
         canvas.height = imgHeight + (padding * 2);
         const ctx = canvas.getContext('2d');
 
-        // Fill entire canvas with white background
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw Image in the center (offset by padding)
         ctx.drawImage(img, padding, padding);
 
         const dataURL = canvas.toDataURL('image/png');
@@ -420,77 +399,64 @@ function downloadImage(dataURL, filename) {
     document.body.removeChild(link);
 }
 
-function downloadQRCodeAsSVG() {
-    if (!currentStudentId) {
-        alert('Please generate a QR code first');
-        return;
-    }
-
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
-    const svg = qrCodeContainer?.querySelector('svg');
-
-    if (!svg) {
-        alert('SVG QR Code not found');
-        return;
-    }
-
-    try {
-        const clonedSVG = svg.cloneNode(true);
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('width', '100%');
-        rect.setAttribute('height', '100%');
-        rect.setAttribute('fill', '#ffffff');
-        clonedSVG.insertBefore(rect, clonedSVG.firstChild);
-
-        const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(clonedSVG);
-        const blob = new Blob([svgString], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `QR_${currentStudentId}.svg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Error downloading SVG:', error);
-    }
-}
-
 // ============================================
-// FORM SUBMISSION & EDITING
+// FORM SUBMISSION & EDITING - FIXED
 // ============================================
 
 function handleFormSubmit(event) {
-    if (!capturedImageData) {
+    // FIXED: Allow edit mode without requiring new photo
+    if (!capturedImageData && !isEditMode) {
         event.preventDefault();
         alert('Please capture or upload a profile photo');
         return false;
     }
 
     const imageDataField = document.getElementById('imageData');
-    if (imageDataField) {
+    if (imageDataField && capturedImageData) {
         imageDataField.value = capturedImageData;
     }
+
+    // FIXED: Ensure student ID is submitted in edit mode
+    const form = document.getElementById('studentForm');
+    const studentIdInput = document.getElementById('studentId');
+
+    if (isEditMode && studentIdInput && studentIdInput.disabled) {
+        // Create a hidden input with the student ID value
+        let hiddenIdInput = form.querySelector('input[name="idno"][type="hidden"]');
+        if (!hiddenIdInput) {
+            hiddenIdInput = document.createElement('input');
+            hiddenIdInput.type = 'hidden';
+            hiddenIdInput.name = 'idno';
+            form.appendChild(hiddenIdInput);
+        }
+        hiddenIdInput.value = studentIdInput.value;
+    }
+
     return true;
 }
 
 function loadStudentForEdit(studentId) {
+    isEditMode = true; // FIXED: Set edit mode flag
+
     fetch(`/api/student/${studentId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 const student = data.student;
 
+                // Fill form fields
                 document.getElementById('studentId').value = student.idno;
                 document.getElementById('lastName').value = student.Lastname;
                 document.getElementById('firstName').value = student.Firstname;
                 document.getElementById('course').value = student.course;
                 document.getElementById('level').value = student.level;
-                document.getElementById('studentId').disabled = true;
 
+                // FIXED: Disable student ID but keep value
+                const studentIdField = document.getElementById('studentId');
+                studentIdField.disabled = true;
+                studentIdField.classList.add('bg-gray-100', 'cursor-not-allowed');
+
+                // Handle existing image
                 if (student.image) {
                     let imagePath = student.image;
                     if (!imagePath.startsWith('/static/') && !imagePath.startsWith('http')) {
@@ -512,11 +478,23 @@ function loadStudentForEdit(studentId) {
 
                 generateQRCode(student.idno);
 
-                // Update form visual state
+                // FIXED: Update form action and create hidden input for student ID
                 const form = document.getElementById('studentForm');
                 const submitBtn = document.getElementById('submitBtn');
 
-                if (form) form.action = '/save_student';
+                if (form) {
+                    form.action = '/save_student';
+
+                    // Create or update hidden input for student ID
+                    let hiddenIdInput = form.querySelector('input[name="idno"][type="hidden"]');
+                    if (!hiddenIdInput) {
+                        hiddenIdInput = document.createElement('input');
+                        hiddenIdInput.type = 'hidden';
+                        hiddenIdInput.name = 'idno';
+                        form.appendChild(hiddenIdInput);
+                    }
+                    hiddenIdInput.value = student.idno;
+                }
 
                 if (submitBtn) {
                     submitBtn.innerHTML = `
@@ -529,6 +507,8 @@ function loadStudentForEdit(studentId) {
                     submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                     submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
                 }
+
+                console.log('✅ Student loaded for editing:', student.idno);
             }
         })
         .catch(error => {
@@ -543,6 +523,6 @@ function loadStudentForEdit(studentId) {
 
 window.generateQRCode = generateQRCode;
 window.downloadQRCode = downloadQRCode;
-window.downloadQRCodeAsSVG = downloadQRCodeAsSVG;
+window.loadStudentForEdit = loadStudentForEdit;
 
-console.log('✅ Student Camera & QR Scripts loaded');
+console.log('✅ Student Camera & QR Scripts loaded (FIXED EDIT MODE)');

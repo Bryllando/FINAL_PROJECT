@@ -1,5 +1,5 @@
 // ============================================
-// admin&student.js - Fixed and Consolidated
+// admin&student.js - Fixed and Consolidated (NO DUPLICATES)
 // ============================================
 
 // Shared helpers
@@ -47,7 +47,6 @@ function $qs(selector, parent = document) {
     return parent.querySelector(selector);
 }
 
-
 // Toggle password visibility in table
 function togglePassword(button) {
     const passwordSpan = button.previousElementSibling;
@@ -62,9 +61,8 @@ function togglePassword(button) {
     }
 }
 
-
 // ============================================
-// ADMIN: PASSWORD VIEW TOGGLE (admin.html)
+// ADMIN: USER MANAGEMENT - SINGLE VERSION
 // ============================================
 
 // Edit user function - loads data into form
@@ -79,7 +77,7 @@ function editUser(userId, email, password) {
 
     // Populate form fields
     emailField.value = email || '';
-    passwordField.value = password || '';
+    passwordField.value = ''; // Don't show password, leave blank
     userIdField.value = userId || '';
 
     // Change form action to update
@@ -92,6 +90,7 @@ function editUser(userId, email, password) {
 
     // Make password not required for updates
     passwordField.required = false;
+    passwordField.placeholder = 'Leave blank to keep current password';
 
     // Scroll to form
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -114,7 +113,10 @@ function resetUserForm() {
     if (userIdField) userIdField.value = '';
 
     // Make password required again
-    if (passwordField) passwordField.required = true;
+    if (passwordField) {
+        passwordField.required = true;
+        passwordField.placeholder = '';
+    }
 
     // Change button back to SAVE
     if (submitBtn) {
@@ -125,64 +127,6 @@ function resetUserForm() {
 }
 
 // Delete user with confirmation
-function deleteUser(userId, email) {
-    if (confirm(`Are you sure you want to delete user: ${email}?`)) {
-        window.location.href = `/delete_user/${userId}`;
-    }
-}
-
-
-// ============================================
-// ADMIN: User management helpers (kept minimal)
-// ============================================
-function editUser(userId, email) {
-    const emailField = $qs('input[name="email"]');
-    const passwordField = $qs('input[name="password"]');
-    if (emailField) emailField.value = email || '';
-    if (passwordField) passwordField.value = '';
-
-    const form = $qs('form[action="/add_user"]') || $qs('form[action="/update_user"]');
-    if (!form) return;
-
-    form.action = '/update_user';
-
-    let idInput = form.querySelector('input[name="id"]');
-    if (!idInput) {
-        idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'id';
-        form.appendChild(idInput);
-    }
-    idInput.value = userId;
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.textContent = 'UPDATE';
-        submitBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-        submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
-    }
-
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function resetUserForm() {
-    const form = $qs('form[action="/add_user"], form[action="/update_user"]');
-    if (!form) return;
-
-    form.reset();
-    form.action = '/add_user';
-
-    const idInput = form.querySelector('input[name="id"]');
-    if (idInput) idInput.remove();
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.textContent = 'SAVE';
-        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-        submitBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-    }
-}
-
 function deleteUser(userId, email) {
     if (confirm(`Are you sure you want to delete user: ${email}?`)) {
         window.location.href = `/delete_user/${userId}`;
@@ -210,6 +154,7 @@ function viewUser(userId, email) {
 
     document.body.appendChild(modal);
 }
+
 // ============================================
 // STUDENT MANAGEMENT (student_mngt.html)
 // ============================================
@@ -230,6 +175,32 @@ function showFormActionButtons() {
 function hideFormActionButtons() {
     const buttonContainer = document.getElementById('formActionButtons');
     if (buttonContainer) buttonContainer.classList.add('hidden');
+}
+
+function clearStudentViewForm() {
+    currentViewedStudentId = null;
+
+    const idNoEl = document.getElementById('idNo');
+    const lastNameEl = document.getElementById('lastName');
+    const firstNameEl = document.getElementById('firstName');
+    const courseEl = document.getElementById('course');
+    const levelEl = document.getElementById('level');
+
+    if (idNoEl) idNoEl.value = '';
+    if (lastNameEl) lastNameEl.value = '';
+    if (firstNameEl) firstNameEl.value = '';
+    if (courseEl) courseEl.value = '';
+    if (levelEl) levelEl.value = '';
+
+    const imageDisplay = document.getElementById('imageDisplay');
+    const imagePlaceholder = document.getElementById('imagePlaceholder');
+
+    if (imageDisplay && imagePlaceholder) {
+        imageDisplay.classList.add('hidden');
+        imagePlaceholder.classList.remove('hidden');
+    }
+
+    hideFormActionButtons();
 }
 
 function viewStudentInForm(studentId) {
@@ -355,11 +326,20 @@ function addNewStudent() {
     if (idInput) idInput.remove();
 
     const idNoField = document.getElementById('studentId');
-    if (idNoField) idNoField.disabled = false;
+    if (idNoField) {
+        idNoField.disabled = false;
+        idNoField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+    }
 
     const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) {
-        submitBtn.textContent = 'SAVE';
+        submitBtn.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            SAVE STUDENT
+        `;
         submitBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
         submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
         submitBtn.disabled = false;
@@ -380,9 +360,9 @@ function editStudent(studentId) {
     const submitBtn = document.getElementById('submitBtn');
     if (!form || !submitBtn) return;
 
-    const originalText = submitBtn.textContent;
+    const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Loading...';
+    submitBtn.innerHTML = 'Loading...';
 
     fetch(`/api/student/${studentId}`)
         .then(response => response.json())
@@ -403,7 +383,10 @@ function editStudent(studentId) {
             if (courseField) courseField.value = student.course || '';
             if (levelField) levelField.value = student.level || '';
 
-            if (studentIdField) studentIdField.disabled = true;
+            if (studentIdField) {
+                studentIdField.disabled = true;
+                studentIdField.classList.add('bg-gray-100', 'cursor-not-allowed');
+            }
 
             // Handle profile image
             if (student.image) {
@@ -419,7 +402,7 @@ function editStudent(studentId) {
 
             form.action = '/save_student';
 
-            let idInput = form.querySelector('input[name="idno"]');
+            let idInput = form.querySelector('input[name="idno"][type="hidden"]');
             if (!idInput) {
                 idInput = document.createElement('input');
                 idInput.type = 'hidden';
@@ -428,7 +411,13 @@ function editStudent(studentId) {
             }
             idInput.value = student.idno || '';
 
-            submitBtn.textContent = 'UPDATE';
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                UPDATE STUDENT
+            `;
             submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
             submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
 
@@ -440,7 +429,7 @@ function editStudent(studentId) {
         })
         .finally(() => {
             submitBtn.disabled = false;
-            if (submitBtn.textContent === 'Loading...') submitBtn.textContent = originalText || 'SAVE';
+            if (submitBtn.innerHTML === 'Loading...') submitBtn.innerHTML = originalText || 'SAVE STUDENT';
         });
 }
 
@@ -464,6 +453,7 @@ window.editUser = editUser;
 window.resetUserForm = resetUserForm;
 window.deleteUser = deleteUser;
 window.viewUser = viewUser;
+window.clearStudentViewForm = clearStudentViewForm;
 window.viewStudentInForm = viewStudentInForm;
 window.viewStudent = viewStudent;
 window.deleteStudent = deleteStudent;
