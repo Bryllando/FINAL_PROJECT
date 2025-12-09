@@ -244,6 +244,16 @@
 
 <!-- Custom styles for webcam -->
 <style>
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
     /* Camera Container Styles - HD Quality Layout */
     /* FIXED: Added max-width to constrain camera size and prevent overflow */
     #camera-container {

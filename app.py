@@ -451,10 +451,43 @@ def save_student():
         return redirect(url_for('student'))
 
 
+@app.route('/api/check_student_id/<student_id>')
+def check_student_id(student_id):
+    """Check if student ID already exists"""
+    try:
+        student_id = student_id.strip()
+
+        if not student_id:
+            return jsonify({
+                'available': False,
+                'message': 'Student ID is required'
+            })
+
+        existing_student = db_helper.get_student_by_id(student_id)
+
+        if existing_student:
+            return jsonify({
+                'available': False,
+                'message': f'Student ID {student_id} already exists'
+            })
+        else:
+            return jsonify({
+                'available': True,
+                'message': 'Student ID is available'
+            })
+
+    except Exception as e:
+        print(f"Error checking student ID: {e}")
+        return jsonify({
+            'available': False,
+            'message': 'Error checking ID availability'
+        }), 500
+
 # ============================================
 # FIXED: Add public endpoint for QR scanner
 # Located in app.py - Add this route
 # ============================================
+
 
 @app.route('/api/student_public/<student_id>')
 def get_student_public(student_id):

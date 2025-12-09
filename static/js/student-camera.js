@@ -1,5 +1,5 @@
 // ============================================
-// STUDENT CAMERA & QR FUNCTIONALITY - FIXED EDIT MODE
+// STUDENT CAMERA & QR FUNCTIONALITY - WITH DUPLICATE ID CHECK
 // ============================================
 
 // Global Variables
@@ -7,7 +7,9 @@ let cameraActive = false;
 let capturedImageData = null;
 let currentQRCode = null;
 let currentStudentId = null;
-let isEditMode = false; // Track if we're in edit mode
+let isEditMode = false;
+let isIdValid = false; // Track if ID is available
+let idCheckTimeout;
 
 // Initialize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
@@ -39,21 +41,34 @@ document.addEventListener('DOMContentLoaded', function () {
     if (studentForm) studentForm.addEventListener('submit', handleFormSubmit);
     if (cancelBtn) cancelBtn.addEventListener('click', cancelStudentForm);
 
-    // --- Event Listeners: QR Code Generation ---
+    // --- Event Listeners: Student ID Validation ---
     if (studentIdInput) {
-        // Generate on typing (after 3 chars)
+        // Real-time duplicate check
         studentIdInput.addEventListener('input', function (e) {
             const studentId = e.target.value.trim();
+
+            clearTimeout(idCheckTimeout);
+            isIdValid = false;
+            hideIdMessages();
+
+            if (studentId.length >= 3 && !isEditMode) {
+                showIdChecking();
+                idCheckTimeout = setTimeout(() => {
+                    checkDuplicateId(studentId);
+                }, 500);
+            }
+
+            // Generate QR code
             if (studentId.length >= 3) {
                 generateQRCode(studentId);
             }
         });
 
-        // Generate on leave field
+        // Check on blur
         studentIdInput.addEventListener('blur', function (e) {
             const studentId = e.target.value.trim();
-            if (studentId) {
-                generateQRCode(studentId);
+            if (studentId && !isEditMode) {
+                checkDuplicateId(studentId);
             }
         });
     }
@@ -67,10 +82,111 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ============================================
+// DUPLICATE ID CHECK
+// ============================================
+
+function checkDuplicateId(studentId) {
+    if (isEditMode) {
+        isIdValid = true;
+        return;
+    }
+
+    fetch(`/api/check_student_id/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            hideIdChecking();
+
+            if (data.available) {
+                isIdValid = true;
+                showIdSuccess('✓ ID is available');
+            } else {
+                isIdValid = false;
+                showIdError('✗ This ID already exists! Please use a different ID.');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking ID:', error);
+            hideIdChecking();
+            showIdError('Error checking ID availability');
+            isIdValid = false;
+        });
+}
+
+function showIdChecking() {
+    const studentIdInput = document.getElementById('studentId');
+    if (!studentIdInput) return;
+
+    hideIdMessages();
+
+    const checkingMsg = document.createElement('p');
+    checkingMsg.id = 'idCheckingMessage';
+    checkingMsg.className = 'mt-1 text-sm text-blue-600 flex items-center gap-2';
+    checkingMsg.innerHTML = `
+        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Checking ID availability...</span>
+    `;
+
+    studentIdInput.classList.remove('border-red-500', 'border-green-500');
+    studentIdInput.classList.add('border-blue-400');
+    studentIdInput.parentNode.appendChild(checkingMsg);
+}
+
+function hideIdChecking() {
+    const checkingMsg = document.getElementById('idCheckingMessage');
+    if (checkingMsg) checkingMsg.remove();
+}
+
+function showIdSuccess(message) {
+    const studentIdInput = document.getElementById('studentId');
+    if (!studentIdInput) return;
+
+    hideIdMessages();
+
+    const successMsg = document.createElement('p');
+    successMsg.id = 'idSuccessMessage';
+    successMsg.className = 'mt-1 text-sm text-green-600 font-semibold';
+    successMsg.textContent = message;
+
+    studentIdInput.classList.remove('border-red-500', 'border-blue-400');
+    studentIdInput.classList.add('border-green-500');
+    studentIdInput.parentNode.appendChild(successMsg);
+}
+
+function showIdError(message) {
+    const studentIdInput = document.getElementById('studentId');
+    if (!studentIdInput) return;
+
+    hideIdMessages();
+
+    const errorMsg = document.createElement('p');
+    errorMsg.id = 'idErrorMessage';
+    errorMsg.className = 'mt-1 text-sm text-red-600 font-semibold';
+    errorMsg.textContent = message;
+
+    studentIdInput.classList.remove('border-green-500', 'border-blue-400');
+    studentIdInput.classList.add('border-red-500');
+    studentIdInput.parentNode.appendChild(errorMsg);
+}
+
+function hideIdMessages() {
+    const studentIdInput = document.getElementById('studentId');
+    if (studentIdInput) {
+        studentIdInput.classList.remove('border-red-500', 'border-green-500', 'border-blue-400');
+    }
+
+    ['idCheckingMessage', 'idSuccessMessage', 'idErrorMessage'].forEach(id => {
+        const msg = document.getElementById(id);
+        if (msg) msg.remove();
+    });
+}
+
+// ============================================
 // CAMERA FUNCTIONS
 // ============================================
 
-// Toggle camera on/off
 function toggleCamera() {
     if (!cameraActive) {
         startCamera();
@@ -79,17 +195,14 @@ function toggleCamera() {
     }
 }
 
-// Start the camera
 function startCamera() {
     const cameraPlaceholder = document.getElementById('cameraPlaceholder');
     const cameraBtnText = document.getElementById('cameraBtnText');
     const cameraBtn = document.getElementById('cameraBtn');
     const captureBtn = document.getElementById('captureBtn');
 
-    // Attach webcam
     Webcam.attach('#camera-container');
 
-    // UI Updates
     if (cameraPlaceholder) cameraPlaceholder.style.display = 'none';
     if (captureBtn) captureBtn.classList.remove('hidden');
     if (cameraBtnText) cameraBtnText.textContent = 'Stop Camera';
@@ -103,17 +216,14 @@ function startCamera() {
     console.log('Camera started');
 }
 
-// Stop the camera
 function stopCamera() {
     const cameraPlaceholder = document.getElementById('cameraPlaceholder');
     const cameraBtnText = document.getElementById('cameraBtnText');
     const cameraBtn = document.getElementById('cameraBtn');
     const captureBtn = document.getElementById('captureBtn');
 
-    // Reset webcam
     Webcam.reset();
 
-    // UI Updates
     if (cameraPlaceholder) cameraPlaceholder.style.display = 'flex';
     if (captureBtn) captureBtn.classList.add('hidden');
     if (cameraBtnText) cameraBtnText.textContent = 'Start Camera';
@@ -127,7 +237,6 @@ function stopCamera() {
     console.log('Camera stopped');
 }
 
-// Capture snapshot from camera
 function captureSnapshot() {
     if (!cameraActive) {
         alert('Please start the camera first');
@@ -138,7 +247,6 @@ function captureSnapshot() {
         stopCamera();
         compressAndStoreImage(data_uri);
 
-        // UI Updates
         const cameraBtn = document.getElementById('cameraBtn');
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
@@ -149,21 +257,17 @@ function captureSnapshot() {
     });
 }
 
-// Retake photo
 function retakePhoto() {
     capturedImageData = null;
 
-    // Hide photo preview
     const photoPreviewSection = document.getElementById('photoPreviewSection');
     if (photoPreviewSection) photoPreviewSection.classList.add('hidden');
 
-    // Hide retake button, show camera button
     const retakeBtn = document.getElementById('retakeBtn');
     const cameraBtn = document.getElementById('cameraBtn');
     if (retakeBtn) retakeBtn.classList.add('hidden');
     if (cameraBtn) cameraBtn.classList.remove('hidden');
 
-    // Reset profile icon/placeholder
     const profileIcon = document.getElementById('profileIcon');
     const profilePlaceholder = document.getElementById('profilePlaceholder');
     const profileBadge = document.getElementById('profileBadge');
@@ -172,16 +276,13 @@ function retakePhoto() {
     if (profilePlaceholder) profilePlaceholder.classList.remove('hidden');
     if (profileBadge) profileBadge.classList.add('hidden');
 
-    // Restart camera
     startCamera();
 }
 
-// Handle file upload
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!validTypes.includes(file.type)) {
         alert('Please upload a valid image file (JPEG, PNG, or GIF)');
@@ -189,21 +290,18 @@ function handleFileUpload(event) {
         return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
         event.target.value = '';
         return;
     }
 
-    // Read and process file
     const reader = new FileReader();
     reader.onload = function (e) {
         compressAndStoreImage(e.target.result);
 
         if (cameraActive) stopCamera();
 
-        // UI Updates
         const cameraBtn = document.getElementById('cameraBtn');
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
@@ -215,7 +313,6 @@ function handleFileUpload(event) {
     reader.readAsDataURL(file);
 }
 
-// Compress and store image
 function compressAndStoreImage(dataUri) {
     const img = new Image();
     img.onload = function () {
@@ -226,7 +323,6 @@ function compressAndStoreImage(dataUri) {
         let width = img.width;
         let height = img.height;
 
-        // Maintain aspect ratio
         if (width > height) {
             if (width > maxSize) {
                 height = (height * maxSize) / width;
@@ -252,7 +348,6 @@ function compressAndStoreImage(dataUri) {
     img.src = dataUri;
 }
 
-// Update image preview
 function updateImagePreview(dataUri) {
     const photoPreviewSection = document.getElementById('photoPreviewSection');
     const photoPreview = document.getElementById('photoPreview');
@@ -272,7 +367,6 @@ function updateImagePreview(dataUri) {
     if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
     if (profileBadge) profileBadge.classList.remove('hidden');
 
-    // Trigger QR generation if ID exists
     const studentId = document.getElementById('studentId')?.value;
     if (studentId) {
         generateQRCode(studentId);
@@ -280,14 +374,11 @@ function updateImagePreview(dataUri) {
 }
 
 // ============================================
-// QR CODE GENERATION AND DOWNLOAD
+// QR CODE GENERATION
 // ============================================
 
 function generateQRCode(studentId) {
-    if (!studentId) {
-        console.warn('No student ID provided for QR generation');
-        return;
-    }
+    if (!studentId) return;
 
     console.log('🔲 Generating QR Code for:', studentId);
     currentStudentId = studentId;
@@ -295,20 +386,14 @@ function generateQRCode(studentId) {
     const qrCodeContainer = document.getElementById('qrCodeContainer');
     const qrCodeSection = document.getElementById('qrCodeSection');
 
-    if (!qrCodeContainer) {
-        console.error('QR Code container not found');
-        return;
-    }
+    if (!qrCodeContainer) return;
 
-    // Clear previous QR code
     qrCodeContainer.innerHTML = '';
 
-    // Show QR code section
     if (qrCodeSection) {
         qrCodeSection.classList.remove('hidden');
     }
 
-    // Generate new QR code
     currentQRCode = new QRCode(qrCodeContainer, {
         text: studentId,
         width: 256,
@@ -317,21 +402,16 @@ function generateQRCode(studentId) {
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
     });
-
-    console.log('✅ QR Code generated successfully');
 }
 
 function downloadQRCode() {
     if (!currentStudentId) {
-        alert('Please generate a QR code first by filling in the student ID');
+        alert('Please generate a QR code first');
         return;
     }
 
     const qrCodeContainer = document.getElementById('qrCodeContainer');
-    if (!qrCodeContainer) {
-        alert('QR Code container not found');
-        return;
-    }
+    if (!qrCodeContainer) return;
 
     const canvas = qrCodeContainer.querySelector('canvas');
     const img = qrCodeContainer.querySelector('img');
@@ -341,7 +421,7 @@ function downloadQRCode() {
     } else if (img) {
         downloadFromImage(img);
     } else {
-        alert('QR Code not found. Please generate a QR code first.');
+        alert('QR Code not found');
     }
 }
 
@@ -362,7 +442,6 @@ function downloadFromCanvas(originalCanvas) {
         downloadImage(dataURL, `QR_${currentStudentId}.png`);
     } catch (error) {
         console.error('Error downloading QR code:', error);
-        alert('Error downloading QR code.');
     }
 }
 
@@ -386,7 +465,6 @@ function downloadFromImage(img) {
         downloadImage(dataURL, `QR_${currentStudentId}.png`);
     } catch (error) {
         console.error('Error downloading QR code:', error);
-        alert('Error downloading QR code.');
     }
 }
 
@@ -400,11 +478,18 @@ function downloadImage(dataURL, filename) {
 }
 
 // ============================================
-// FORM SUBMISSION & EDITING - FIXED
+// FORM SUBMISSION & EDITING
 // ============================================
 
 function handleFormSubmit(event) {
-    // FIXED: Allow edit mode without requiring new photo
+    // Check for duplicate ID (only in add mode)
+    if (!isEditMode && !isIdValid) {
+        event.preventDefault();
+        alert('Please use a valid, unique Student ID');
+        return false;
+    }
+
+    // Check for photo (optional in edit mode)
     if (!capturedImageData && !isEditMode) {
         event.preventDefault();
         alert('Please capture or upload a profile photo');
@@ -416,12 +501,10 @@ function handleFormSubmit(event) {
         imageDataField.value = capturedImageData;
     }
 
-    // FIXED: Ensure student ID is submitted in edit mode
     const form = document.getElementById('studentForm');
     const studentIdInput = document.getElementById('studentId');
 
     if (isEditMode && studentIdInput && studentIdInput.disabled) {
-        // Create a hidden input with the student ID value
         let hiddenIdInput = form.querySelector('input[name="idno"][type="hidden"]');
         if (!hiddenIdInput) {
             hiddenIdInput = document.createElement('input');
@@ -436,7 +519,8 @@ function handleFormSubmit(event) {
 }
 
 function loadStudentForEdit(studentId) {
-    isEditMode = true; // FIXED: Set edit mode flag
+    isEditMode = true;
+    isIdValid = true; // Skip validation in edit mode
 
     fetch(`/api/student/${studentId}`)
         .then(response => response.json())
@@ -444,19 +528,16 @@ function loadStudentForEdit(studentId) {
             if (data.success) {
                 const student = data.student;
 
-                // Fill form fields
                 document.getElementById('studentId').value = student.idno;
                 document.getElementById('lastName').value = student.Lastname;
                 document.getElementById('firstName').value = student.Firstname;
                 document.getElementById('course').value = student.course;
                 document.getElementById('level').value = student.level;
 
-                // FIXED: Disable student ID but keep value
                 const studentIdField = document.getElementById('studentId');
                 studentIdField.disabled = true;
                 studentIdField.classList.add('bg-gray-100', 'cursor-not-allowed');
 
-                // Handle existing image
                 if (student.image) {
                     let imagePath = student.image;
                     if (!imagePath.startsWith('/static/') && !imagePath.startsWith('http')) {
@@ -478,14 +559,12 @@ function loadStudentForEdit(studentId) {
 
                 generateQRCode(student.idno);
 
-                // FIXED: Update form action and create hidden input for student ID
                 const form = document.getElementById('studentForm');
                 const submitBtn = document.getElementById('submitBtn');
 
                 if (form) {
                     form.action = '/save_student';
 
-                    // Create or update hidden input for student ID
                     let hiddenIdInput = form.querySelector('input[name="idno"][type="hidden"]');
                     if (!hiddenIdInput) {
                         hiddenIdInput = document.createElement('input');
@@ -524,5 +603,6 @@ function loadStudentForEdit(studentId) {
 window.generateQRCode = generateQRCode;
 window.downloadQRCode = downloadQRCode;
 window.loadStudentForEdit = loadStudentForEdit;
+window.checkDuplicateId = checkDuplicateId;
 
-console.log('✅ Student Camera & QR Scripts loaded (FIXED EDIT MODE)');
+console.log('✅ Student Camera & QR Scripts loaded with Duplicate ID Check');
