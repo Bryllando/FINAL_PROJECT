@@ -50,7 +50,7 @@ function startScanner() {
 
     const config = {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
+        qrbox: { width: 450, height: 450 }, // Extra large scan area for easier scanning
         aspectRatio: 1.0
     };
 
@@ -181,8 +181,8 @@ function showStudentModal(student) {
 
     const profilePicture = imagePath
         ? `<img src="${imagePath}" class="w-full h-full object-cover" alt="Profile" 
-            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentElement.innerHTML='<svg class=\\'w-20 h-20 text-gray-400\\' fill=\\'currentColor\\' viewBox=\\'0 0 20 20\\'><path fill-rule=\\'evenodd\\' d=\\'M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\\' clip-rule=\\'evenodd\\' /></svg>';">`
-        : `<svg class="w-20 h-20 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentElement.innerHTML='<svg class=\\'w-32 h-32 text-gray-400\\' fill=\\'currentColor\\' viewBox=\\'0 0 20 20\\'><path fill-rule=\\'evenodd\\' d=\\'M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\\' clip-rule=\\'evenodd\\' /></svg>';">`
+        : `<svg class="w-32 h-32 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
            </svg>`;
 
@@ -198,56 +198,61 @@ function showStudentModal(student) {
     });
 
     const modalHTML = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 animate-fadeIn">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slideUp">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-                    <h3 class="text-xl font-bold flex items-center gap-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="fixed inset-0 bg-opacity-60 flex items-center justify-center z-9999 p-4 animate-fadeIn">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full animate-slideUp">
+                <div class="bg-linear-to-r from-green-500 to-green-600 text-white px-8 py-6 rounded-t-3xl flex justify-between items-center">
+                    <h3 class="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                        <svg class="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Attendance Logged
                     </h3>
-                    <button class="close-modal text-white hover:text-gray-200 text-2xl font-bold leading-none transition">×</button>
+                    <button class="close-modal text-white hover:text-gray-200 text-3xl font-bold leading-none transition hover:scale-110">×</button>
                 </div>
 
-                <div class="p-6">
-                    <div class="flex justify-center mb-6">
-                        <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-green-500 shadow-lg">
+                <div class="p-8 md:p-10">
+                    <div class="flex justify-center mb-8">
+                        <div class="w-48 h-48 md:w-56 md:h-56 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-green-500 shadow-2xl">
                             ${profilePicture}
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">ID Number</p>
-                            <p class="text-lg font-bold text-blue-600">${student.idno}</p>
+                    <div class="space-y-5">
+                        <div class="bg-linear-to-r from-gray-50 to-gray-100 rounded-xl p-6 shadow-sm">
+                            <p class="text-sm text-gray-500 uppercase font-bold mb-2 tracking-wide">ID Number</p>
+                            <p class="text-2xl md:text-3xl font-bold text-blue-600">${student.idno}</p>
                         </div>
                         
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Full Name</p>
-                            <p class="text-lg font-semibold text-gray-800">${student.Firstname} ${student.Lastname}</p>
+                        <div class="bg-linear-to-r from-gray-50 to-gray-100 rounded-xl p-6 shadow-sm">
+                            <p class="text-sm text-gray-500 uppercase font-bold mb-2 tracking-wide">Full Name</p>
+                            <p class="text-2xl md:text-3xl font-bold text-gray-800">${student.Firstname} ${student.Lastname}</p>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Course</p>
-                                <p class="text-sm font-medium text-gray-700">${student.course}</p>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div class="bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-sm">
+                                <p class="text-sm text-gray-500 uppercase font-bold mb-2 tracking-wide">Course</p>
+                                <p class="text-lg md:text-xl font-bold text-gray-700">${student.course}</p>
                             </div>
                             
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Level</p>
-                                <p class="text-sm font-medium text-gray-700">${getYearLevelText(student.level)}</p>
+                            <div class="bg-linear-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-sm">
+                                <p class="text-sm text-gray-500 uppercase font-bold mb-2 tracking-wide">Level</p>
+                                <p class="text-lg md:text-xl font-bold text-gray-700">${getYearLevelText(student.level)}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-4 text-center">
-                        <p class="text-xs text-gray-500">${currentDateTime}</p>
+                    <div class="mt-8 pt-6 border-t-2 border-gray-200">
+                        <div class="flex items-center justify-center gap-2 text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-base font-medium">${currentDateTime}</p>
+                        </div>
                     </div>
 
-                    <div class="mt-4 text-center">
-                        <p class="text-sm text-gray-500">
-                            <span class="countdown-timer font-semibold">3</span> seconds remaining...
+                    <div class="mt-6 text-center bg-green-50 rounded-lg py-4">
+                        <p class="text-lg text-gray-700">
+                            Auto-closing in <span class="countdown-timer font-bold text-green-600 text-xl">3</span> seconds...
                         </p>
                     </div>
                 </div>
@@ -286,42 +291,64 @@ function showNotFoundModal(studentId) {
     console.log('❌ Showing not found modal for:', studentId);
 
     const modalHTML = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 animate-fadeIn">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slideUp">
-                <div class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-                    <h3 class="text-xl font-bold flex items-center gap-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="fixed inset-0  bg-opacity-60 flex items-center justify-center z-9999 p-4 animate-fadeIn">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full animate-slideUp">
+                <div class="bg-linear-to-r from-red-500 to-red-600 text-white px-8 py-6 rounded-t-3xl flex justify-between items-center">
+                    <h3 class="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                        <svg class="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Student Not Found
                     </h3>
-                    <button class="close-modal text-white hover:text-gray-200 text-2xl font-bold leading-none transition">×</button>
+                    <button class="close-modal text-white hover:text-gray-200 text-3xl font-bold leading-none transition hover:scale-110">×</button>
                 </div>
 
-                <div class="p-6">
-                    <div class="flex justify-center mb-6">
-                        <div class="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center border-4 border-red-500">
-                            <svg class="w-20 h-20 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-8 md:p-10">
+                    <div class="flex justify-center mb-8">
+                        <div class="w-48 h-48 md:w-56 md:h-56 bg-red-100 rounded-full flex items-center justify-center border-4 border-red-500 shadow-2xl">
+                            <svg class="w-32 h-32 md:w-40 md:h-40 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                     </div>
 
-                    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded">
-                        <p class="font-bold mb-2">Scanned ID: ${studentId}</p>
-                        <p class="text-sm mb-2">This student is not registered in the system.</p>
-                        <p class="text-sm mt-2 font-semibold">Please check:</p>
-                        <ul class="list-disc list-inside text-sm mt-2 space-y-1">
-                            <li>QR code is valid</li>
-                            <li>Student is registered</li>
-                            <li>Correct student ID</li>
-                        </ul>
+                    <div class="bg-linear-to-r from-red-50 to-red-100 border-l-4 border-red-500 text-red-700 p-6 md:p-8 rounded-xl shadow-sm">
+                        <p class="font-bold text-xl md:text-2xl mb-4 flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                            </svg>
+                            Scanned ID: ${studentId}
+                        </p>
+                        <p class="text-base md:text-lg mb-4 font-medium">This student is not registered in the system.</p>
+                        
+                        <div class="mt-6 bg-white bg-opacity-50 rounded-lg p-5">
+                            <p class="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                                Please check:
+                            </p>
+                            <ul class="space-y-3 text-base md:text-lg">
+                                <li class="flex items-center gap-3">
+                                    <span class="shrink-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    <span>QR code is valid and readable</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span class="shrink-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    <span>Student is registered in the database</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span class="shrink-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    <span>Student ID matches system records</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="mt-4 text-center">
-                        <p class="text-sm text-gray-500">
-                            <span class="countdown-timer font-semibold">3</span> seconds remaining...
+                    <div class="mt-8 text-center bg-red-50 rounded-lg py-4">
+                        <p class="text-lg text-gray-700">
+                            Auto-closing in <span class="countdown-timer font-bold text-red-600 text-xl">3</span> seconds...
                         </p>
                     </div>
                 </div>
