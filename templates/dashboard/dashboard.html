@@ -23,6 +23,7 @@
                 </h1>
             </div>
 
+            <!-- RECOMMENDED FIX for dashboard.html header buttons: -->
             <div class="flex gap-2 sm:gap-3">
                 <button type="button" onclick="window.location.href='/'"
                     class="rounded-lg bg-sky-500 hover:bg-sky-600 text-white px-3 py-2 text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2 transition">
@@ -30,8 +31,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
-                    <span class="hidden sm:inline">SCANNER</span>
-                    <span class="sm:hidden">SCAN</span>
+                    <!-- OPTION 1: Show full text always -->
+                    <span>SCANNER</span>
+
+                    <!-- OPTION 2: Keep responsive (current behavior) -->
+                    <!-- <span class="hidden sm:inline">SCANNER</span>
+        <span class="sm:hidden">SCAN</span> -->
                 </button>
 
                 <button type="button" onclick="window.location.href='/logout'"
@@ -40,7 +45,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    <span class="hidden sm:inline">LOGOUT</span>
+                    <!-- OPTION 1: Show full text always -->
+                    <span>LOGOUT</span>
+
+                    <!-- OPTION 2: Keep responsive (hide text on small screens) -->
+                    <!-- <span class="hidden sm:inline">LOGOUT</span> -->
                 </button>
             </div>
         </div>

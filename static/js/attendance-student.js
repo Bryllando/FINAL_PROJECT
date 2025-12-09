@@ -1,13 +1,57 @@
 // ============================================
 // ATTENDANCE.HTML - ATTENDANCE MANAGEMENT FUNCTIONS
+// FIXED: Added AM/PM format for time display
 // ============================================
 
 // Attendance variables
 let currentSelectedStudent = null;
 let currentDate = new Date().toISOString().split('T')[0];
 
+// ============================================
+// TIME FORMATTING HELPER
+// ============================================
+
+/**
+ * Convert 24-hour time to 12-hour format with AM/PM
+ * @param {string} time24 - Time in HH:MM format (24-hour)
+ * @returns {string} - Time in hh:MM AM/PM format
+ */
+function formatTimeWithAMPM(time24) {
+    if (!time24 || time24 === '-' || time24 === '') {
+        return '-';
+    }
+
+    try {
+        // Split time into hours and minutes
+        const [hours24, minutes] = time24.split(':');
+        let hours = parseInt(hours24, 10);
+
+        // Determine AM or PM
+        const period = hours >= 12 ? 'PM' : 'AM';
+
+        // Convert to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 should be 12
+
+        // Pad single digits with leading zero
+        const hoursStr = String(hours).padStart(2, '0');
+
+        return `${hoursStr}:${minutes} ${period}`;
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return time24; // Return original if formatting fails
+    }
+}
+
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
 // Initialize attendance page
 function initializeAttendance() {
+    console.log('📊 Initializing attendance page...');
+
     // Set today's date as default
     const dateInput = document.getElementById('attendanceDate');
     if (dateInput) {
@@ -35,25 +79,44 @@ function initializeAttendance() {
     }
 }
 
-// Load attendance for a specific date
+
+// ============================================
+// ATTENDANCE DATA LOADING
+// ============================================
+
+/**
+ * Load attendance records for a specific date
+ * @param {string} date - Date in YYYY-MM-DD format
+ */
 async function loadAttendance(date) {
+    console.log('📥 Loading attendance for date:', date);
+
     try {
         const response = await fetch(`/api/attendance/${date}`);
         const data = await response.json();
 
         if (data.success) {
+            console.log('✅ Attendance data loaded:', data.attendance.length, 'records');
             displayAttendance(data.attendance);
             updateStats(data.stats);
         } else {
             showError('Failed to load attendance: ' + data.message);
         }
     } catch (error) {
-        console.error('Error loading attendance:', error);
+        console.error('❌ Error loading attendance:', error);
         showError('Error loading attendance data');
     }
 }
 
-// Display attendance in table
+
+// ============================================
+// ATTENDANCE DISPLAY
+// ============================================
+
+/**
+ * Display attendance records in table with AM/PM format
+ * @param {Array} attendanceRecords - Array of attendance records
+ */
 function displayAttendance(attendanceRecords) {
     const tbody = document.getElementById('attendanceTableBody');
     if (!tbody) return;
@@ -73,20 +136,24 @@ function displayAttendance(attendanceRecords) {
 
     attendanceRecords.forEach(record => {
         const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50';
+        row.className = 'hover:bg-gray-50 transition';
 
         const statusClass = getStatusClass(record.status);
         const statusBadge = `
-            <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 cursor-pointer hover:opacity-80">
+            <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 cursor-pointer hover:opacity-80 transition">
                 ${getStatusIcon(record.status)}
                 ${record.status}
             </span>
         `;
 
+        // Format times with AM/PM
+        const timeIn = formatTimeWithAMPM(record.time_in);
+        const timeOut = formatTimeWithAMPM(record.time_out);
+
         row.innerHTML = `
             <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-blue-600 font-semibold">${record.idno}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.time_in || '-'}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.time_out || '-'}</td>
+            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeIn}</td>
+            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeOut}</td>
             <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.Firstname} ${record.Lastname}</td>
             <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.course} - ${record.level}</td>
             <td class="px-3 sm:px-4 py-3 text-center">
@@ -96,7 +163,7 @@ function displayAttendance(attendanceRecords) {
 
         tbody.appendChild(row);
 
-        // Add click event listener to the status badge
+        // Add click event listener to the status badge for toggling
         const statusSpan = row.querySelector('span');
         statusSpan.addEventListener('click', function () {
             toggleStatus(record.idno, record.status);
@@ -104,7 +171,15 @@ function displayAttendance(attendanceRecords) {
     });
 }
 
-// Update statistics
+
+// ============================================
+// STATISTICS UPDATE
+// ============================================
+
+/**
+ * Update attendance statistics display
+ * @param {Object} stats - Statistics object with total, present, late, absent counts
+ */
 function updateStats(stats) {
     const totalEl = document.getElementById('totalStudents');
     const presentEl = document.getElementById('presentCount');
@@ -115,30 +190,49 @@ function updateStats(stats) {
     if (presentEl) presentEl.textContent = stats.present || 0;
     if (lateEl) lateEl.textContent = stats.late || 0;
     if (absentEl) absentEl.textContent = stats.absent || 0;
+
+    console.log('📊 Stats updated:', stats);
 }
 
-// Update attendance table (called from scanner)
+/**
+ * Update attendance table (called from QR scanner)
+ * Reloads the current date's attendance
+ */
 function updateAttendanceTable() {
+    console.log('🔄 Updating attendance table from scanner...');
     if (typeof loadAttendance === 'function') {
         loadAttendance(currentDate);
     }
 }
 
-// Get status badge class
+
+// ============================================
+// STATUS MANAGEMENT
+// ============================================
+
+/**
+ * Get CSS class for status badge
+ * @param {string} status - Attendance status (PRESENT, LATE, ABSENT)
+ * @returns {string} - CSS classes for badge
+ */
 function getStatusClass(status) {
     switch (status) {
         case 'PRESENT':
-            return 'bg-green-100 text-green-700';
+            return 'bg-green-100 text-green-700 border border-green-300';
         case 'LATE':
-            return 'bg-yellow-100 text-yellow-700';
+            return 'bg-yellow-100 text-yellow-700 border border-yellow-300';
         case 'ABSENT':
-            return 'bg-red-100 text-red-700';
+            return 'bg-red-100 text-red-700 border border-red-300';
         default:
-            return 'bg-gray-100 text-gray-700';
+            return 'bg-gray-100 text-gray-700 border border-gray-300';
     }
 }
 
-// Get status icon
+/**
+ * Get SVG icon for status
+ * @param {string} status - Attendance status
+ * @returns {string} - SVG icon HTML
+ */
 function getStatusIcon(status) {
     switch (status) {
         case 'PRESENT':
@@ -152,7 +246,11 @@ function getStatusIcon(status) {
     }
 }
 
-// Toggle status on click (ABSENT -> PRESENT -> LATE -> ABSENT)
+/**
+ * Toggle attendance status (ABSENT -> PRESENT -> LATE -> ABSENT cycle)
+ * @param {string} studentIdno - Student ID number
+ * @param {string} currentStatus - Current attendance status
+ */
 async function toggleStatus(studentIdno, currentStatus) {
     // Determine next status in cycle
     let newStatus;
@@ -169,6 +267,8 @@ async function toggleStatus(studentIdno, currentStatus) {
         default:
             newStatus = 'PRESENT';
     }
+
+    console.log(`🔄 Toggling status for ${studentIdno}: ${currentStatus} -> ${newStatus}`);
 
     try {
         const currentTime = getCurrentTime();
@@ -190,17 +290,27 @@ async function toggleStatus(studentIdno, currentStatus) {
         const data = await response.json();
 
         if (data.success) {
+            console.log('✅ Status updated successfully');
             loadAttendance(currentDate); // Reload attendance
         } else {
+            console.error('❌ Failed to update status:', data.message);
             showError('Failed to update status: ' + data.message);
         }
     } catch (error) {
-        console.error('Error updating status:', error);
+        console.error('❌ Error updating status:', error);
         showError('Error updating attendance status');
     }
 }
 
-// Get current time in HH:MM format
+
+// ============================================
+// TIME UTILITIES
+// ============================================
+
+/**
+ * Get current time in HH:MM format (24-hour)
+ * @returns {string} - Current time
+ */
 function getCurrentTime() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -208,8 +318,18 @@ function getCurrentTime() {
     return `${hours}:${minutes}`;
 }
 
-// Export attendance to CSV
+
+// ============================================
+// EXPORT FUNCTIONALITY
+// ============================================
+
+/**
+ * Export attendance data to CSV file
+ * Includes AM/PM formatted times
+ */
 function exportAttendance() {
+    console.log('📥 Exporting attendance...');
+
     const date = currentDate;
     const tbody = document.getElementById('attendanceTableBody');
     if (!tbody) return;
@@ -221,23 +341,25 @@ function exportAttendance() {
         return;
     }
 
+    // CSV Header
     let csv = 'ID,Time In,Time Out,Full Name,Course & Level,Status\n';
 
+    // CSV Rows
     rows.forEach(row => {
         const cells = row.cells;
         const csvRow = [
-            cells[0].textContent,
-            cells[1].textContent,
-            cells[2].textContent,
-            cells[3].textContent,
-            cells[4].textContent,
-            cells[5].textContent.trim()
+            cells[0].textContent.trim(),
+            cells[1].textContent.trim(),
+            cells[2].textContent.trim(),
+            `"${cells[3].textContent.trim()}"`, // Quotes for names with commas
+            `"${cells[4].textContent.trim()}"`, // Quotes for course info
+            cells[5].textContent.trim().replace(/\s+/g, ' ') // Clean up status text
         ].join(',');
         csv += csvRow + '\n';
     });
 
-    // Create download link
-    const blob = new Blob([csv], { type: 'text/csv' });
+    // Create and download file
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -247,24 +369,41 @@ function exportAttendance() {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    showSuccess('Attendance exported successfully');
+    showSuccess('Attendance exported successfully!');
+    console.log('✅ Export completed');
 }
 
-// Show success message
+
+// ============================================
+// USER FEEDBACK
+// ============================================
+
+/**
+ * Show success message
+ * @param {string} message - Success message
+ */
 function showSuccess(message) {
-    alert(message);
+    alert('✅ ' + message);
 }
 
-// Show error message
+/**
+ * Show error message
+ * @param {string} message - Error message
+ */
 function showError(message) {
-    alert(message);
+    alert('❌ ' + message);
 }
+
 
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
 
-// Helper function to get year level text
+/**
+ * Get year level text from number
+ * @param {number|string} level - Year level
+ * @returns {string} - Formatted year level
+ */
 function getYearLevel(level) {
     const levels = {
         '1': '1st Year',
@@ -279,145 +418,6 @@ function getYearLevel(level) {
     return levels[level] || level;
 }
 
-// Download QR Code function
-function downloadQRCode() {
-    const qrContainer = document.getElementById('qrCodeContainer');
-    if (!qrContainer) return;
-
-    const canvas = qrContainer.querySelector('canvas');
-    if (canvas) {
-        // Get student ID for filename
-        const studentId = document.getElementById('studentId').value || 'student';
-
-        // Convert canvas to image
-        const url = canvas.toDataURL('image/png');
-
-        // Create download link
-        const link = document.createElement('a');
-        link.download = `QR_${studentId}.png`;
-        link.href = url;
-        link.click();
-    } else {
-        alert('QR Code not generated yet');
-    }
-}
-
-// Helper function to create modal
-function createModal(title, content) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-    modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800">${title}</h3>
-                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div class="px-6 py-4">
-                ${content}
-            </div>
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-                <button onclick="this.closest('.fixed').remove()" 
-                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-
-    return modal;
-}
-
-// Form validation for student form
-function validateStudentForm() {
-    const idNo = document.getElementById('studentId')?.value.trim();
-    const lastName = document.getElementById('lastName')?.value.trim();
-    const firstName = document.getElementById('firstName')?.value.trim();
-    const course = document.getElementById('course')?.value;
-    const level = document.getElementById('level')?.value;
-
-    if (!idNo) {
-        alert('Please enter ID Number');
-        document.getElementById('studentId')?.focus();
-        return false;
-    }
-
-    if (!lastName) {
-        alert('Please enter Last Name');
-        document.getElementById('lastName')?.focus();
-        return false;
-    }
-
-    if (!firstName) {
-        alert('Please enter First Name');
-        document.getElementById('firstName')?.focus();
-        return false;
-    }
-
-    if (!course) {
-        alert('Please select a Course');
-        document.getElementById('course')?.focus();
-        return false;
-    }
-
-    if (!level) {
-        alert('Please select a Level');
-        document.getElementById('level')?.focus();
-        return false;
-    }
-
-    return true;
-}
-
-// Form validation for user form
-function validateUserForm() {
-    const emailInput = document.querySelector('input[name="email"]');
-    const passwordInput = document.querySelector('input[name="password"]');
-
-    if (!emailInput || !passwordInput) return true;
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!email) {
-        alert('Please enter email address');
-        emailInput.focus();
-        return false;
-    }
-
-    // Email validation regex
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address');
-        emailInput.focus();
-        return false;
-    }
-
-    if (!password) {
-        alert('Please enter password');
-        passwordInput.focus();
-        return false;
-    }
-
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters long');
-        passwordInput.focus();
-        return false;
-    }
-
-    return true;
-}
-
 
 // ============================================
 // INITIALIZATION
@@ -425,6 +425,8 @@ function validateUserForm() {
 
 // Initialize event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
+    console.log('📋 Attendance page script loaded');
+
     // Check if we're on the attendance page
     if (document.getElementById('attendanceTableBody')) {
         initializeAttendance();
@@ -434,7 +436,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const editStudentId = sessionStorage.getItem('editStudentId');
     if (editStudentId && document.getElementById('studentForm')) {
         // We're on the student form page and need to edit a student
-        editStudent(editStudentId);
+        if (typeof editStudent === 'function') {
+            editStudent(editStudentId);
+        }
         // Clear the sessionStorage after loading
         sessionStorage.removeItem('editStudentId');
     }
@@ -443,14 +447,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const studentForm = document.getElementById('studentForm');
     if (studentForm) {
         studentForm.addEventListener('submit', function (e) {
-            if (!validateStudentForm()) {
+            if (typeof validateStudentForm === 'function' && !validateStudentForm()) {
                 e.preventDefault();
             }
         });
 
         // Cancel button handler
         const cancelBtn = document.getElementById('cancelBtn');
-        if (cancelBtn) {
+        if (cancelBtn && typeof cancelStudentForm === 'function') {
             cancelBtn.addEventListener('click', cancelStudentForm);
         }
     }
@@ -459,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const userForms = document.querySelectorAll('form[action="/add_user"], form[action="/update_user"]');
     userForms.forEach(form => {
         form.addEventListener('submit', function (e) {
-            if (!validateUserForm()) {
+            if (typeof validateUserForm === 'function' && !validateUserForm()) {
                 e.preventDefault();
             }
         });
@@ -467,13 +471,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add Student button handler (if exists on page)
     const addStudentBtn = document.getElementById('addStudentBtn');
-    if (addStudentBtn) {
+    if (addStudentBtn && typeof addNewStudent === 'function') {
         addStudentBtn.addEventListener('click', addNewStudent);
     }
 
     // Edit button handler for Student_mngt.html
     const editFormBtn = document.getElementById('editFormBtn');
-    if (editFormBtn) {
+    if (editFormBtn && typeof editStudentRedirect === 'function') {
         editFormBtn.addEventListener('click', function () {
             editStudentRedirect();
         });
@@ -481,7 +485,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Clear form button handler for Student_mngt.html
     const clearFormBtn = document.getElementById('clearFormBtn');
-    if (clearFormBtn) {
+    if (clearFormBtn && typeof clearStudentViewForm === 'function') {
         clearFormBtn.addEventListener('click', clearStudentViewForm);
     }
 });
+
+console.log('✅ Attendance management script loaded');

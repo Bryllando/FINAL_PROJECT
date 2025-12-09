@@ -448,6 +448,44 @@ def save_student():
         return redirect(url_for('student'))
 
 
+# ============================================
+# FIXED: Add public endpoint for QR scanner
+# Located in app.py - Add this route
+# ============================================
+
+@app.route('/api/student_public/<student_id>')
+def get_student_public(student_id):
+    """
+    PUBLIC endpoint for QR scanner to fetch student info
+    Does NOT require authentication (no @login_required)
+    This allows the scanner on index.html to work
+    """
+    try:
+        # Fetch student from database
+        student = db_helper.get_student_by_id(student_id)
+
+        if student:
+            # Return success response with student data
+            return jsonify({
+                'success': True,
+                'student': dict(student)  # Convert Row object to dict
+            })
+        else:
+            # Student not found in database
+            return jsonify({
+                'success': False,
+                'message': 'Student not found'
+            }), 404
+
+    except Exception as e:
+        # Handle any errors
+        print(f"Error fetching student: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
 @app.route('/delete_student/<student_id>')
 @login_required
 def delete_student(student_id):
@@ -498,25 +536,54 @@ def get_attendance(date):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+# ============================================
+# FIXED: Update attendance marking endpoint
+# Make it work for both authenticated and public access
+# ============================================
+
 @app.route('/api/attendance/mark', methods=['POST'])
-@login_required
-def mark_attendance():
+def mark_attendance_public():
+    """
+    PUBLIC endpoint to mark attendance from QR scanner
+    Removed @login_required to allow scanner to work
+    """
     try:
+        # Get data from request
         data = request.get_json()
         student_idno = data.get('student_idno')
         date = data.get('date')
         time_in = data.get('time_in')
         status = data.get('status', 'PRESENT')
 
+        # Validate required fields
+        if not student_idno or not date or not time_in:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required fields'
+            }), 400
+
+        # Mark attendance in database
         success, message = db_helper.mark_attendance(
-            student_idno, date, time_in, status)
+            student_idno, date, time_in, status
+        )
 
         if success:
-            return jsonify({'success': True, 'message': message})
+            return jsonify({
+                'success': True,
+                'message': message
+            })
         else:
-            return jsonify({'success': False, 'message': message}), 400
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
+
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f"Error marking attendance: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 
 @app.route('/api/attendance/update_status', methods=['POST'])
