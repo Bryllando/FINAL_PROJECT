@@ -26,7 +26,7 @@ function initializeStudentList() {
                 firstname: cells[2].textContent.trim(),
                 course: cells[3].textContent.trim(),
                 level: cells[4].textContent.trim(),
-                element: row
+                element: row.cloneNode(true) // Clone to preserve original
             });
         }
     });
@@ -43,28 +43,27 @@ function initializeStudentList() {
 
 // Add click listeners to table headers for sorting
 function addSortListeners() {
-    const headers = {
-        'idno': document.querySelector('th:nth-child(1)'),
-        'lastname': document.querySelector('th:nth-child(2)'),
-        'firstname': document.querySelector('th:nth-child(3)'),
-        'course': document.querySelector('th:nth-child(4)'),
-        'level': document.querySelector('th:nth-child(5)')
-    };
+    const thead = document.querySelector('thead');
+    if (!thead) return;
 
-    Object.keys(headers).forEach(column => {
-        const header = headers[column];
-        if (header && header.textContent.trim() !== 'ACTION') {
+    const headers = thead.querySelectorAll('th');
+    const columns = ['idno', 'lastname', 'firstname', 'course', 'level'];
+
+    headers.forEach((header, index) => {
+        if (index < columns.length) { // Skip ACTION column
             header.style.cursor = 'pointer';
             header.style.userSelect = 'none';
+            header.classList.add('hover:bg-gray-700', 'transition-colors');
 
             // Add sort icon
             const iconSpan = document.createElement('span');
-            iconSpan.className = 'sort-icon ml-1';
-            iconSpan.innerHTML = '↕️';
+            iconSpan.className = 'sort-icon ml-1 inline-block';
+            iconSpan.innerHTML = '↕'; // Up-down arrow
+            iconSpan.style.opacity = '0.3';
             header.appendChild(iconSpan);
 
             header.addEventListener('click', () => {
-                sortStudents(column);
+                sortStudents(columns[index]);
             });
         }
     });
@@ -100,12 +99,15 @@ function sortStudents(column) {
 function updateSortIcons() {
     // Reset all icons
     document.querySelectorAll('.sort-icon').forEach(icon => {
-        icon.innerHTML = '↕️';
+        icon.innerHTML = '↕';
         icon.style.opacity = '0.3';
     });
 
     // Update active column icon
-    const headers = document.querySelectorAll('thead th');
+    const thead = document.querySelector('thead');
+    if (!thead) return;
+
+    const headers = thead.querySelectorAll('th');
     const columnIndex = {
         'idno': 0,
         'lastname': 1,
@@ -172,7 +174,8 @@ function renderStudentList() {
         `;
     } else {
         filteredStudents.forEach(student => {
-            tbody.appendChild(student.element.cloneNode(true));
+            const row = student.element.cloneNode(true);
+            tbody.appendChild(row);
         });
 
         // Re-attach event listeners to cloned elements
@@ -189,23 +192,33 @@ function reattachEventListeners() {
     if (!tbody) return;
 
     // Re-attach view button listeners
-    tbody.querySelectorAll('button[onclick^="viewStudentInForm"]').forEach(btn => {
+    tbody.querySelectorAll('button[onclick*="viewStudentInForm"]').forEach(btn => {
         const onclick = btn.getAttribute('onclick');
-        const match = onclick.match(/'([^']+)'/);
-        if (match) {
-            const studentId = match[1];
-            btn.onclick = () => viewStudentInForm(studentId);
+        if (onclick) {
+            const match = onclick.match(/viewStudentInForm\('([^']+)'\)/);
+            if (match) {
+                const studentId = match[1];
+                btn.onclick = function (e) {
+                    e.preventDefault();
+                    viewStudentInForm(studentId);
+                };
+            }
         }
     });
 
     // Re-attach delete button listeners
-    tbody.querySelectorAll('button[onclick^="deleteStudent"]').forEach(btn => {
+    tbody.querySelectorAll('button[onclick*="deleteStudent"]').forEach(btn => {
         const onclick = btn.getAttribute('onclick');
-        const matches = onclick.match(/'([^']+)'/g);
-        if (matches && matches.length >= 2) {
-            const studentId = matches[0].replace(/'/g, '');
-            const studentName = matches[1].replace(/'/g, '');
-            btn.onclick = () => deleteStudent(studentId, studentName);
+        if (onclick) {
+            const match = onclick.match(/deleteStudent\('([^']+)',\s*'([^']+)'\)/);
+            if (match) {
+                const studentId = match[1];
+                const studentName = match[2];
+                btn.onclick = function (e) {
+                    e.preventDefault();
+                    deleteStudent(studentId, studentName);
+                };
+            }
         }
     });
 }
@@ -250,18 +263,18 @@ function exportFilteredStudents() {
         if (row.cells.length > 1) {
             const cells = row.cells;
             const csvRow = [
-                cells[0].textContent.trim(),
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(),
-                cells[3].textContent.trim(),
-                cells[4].textContent.trim()
+                `"${cells[0].textContent.trim()}"`,
+                `"${cells[1].textContent.trim()}"`,
+                `"${cells[2].textContent.trim()}"`,
+                `"${cells[3].textContent.trim()}"`,
+                `"${cells[4].textContent.trim()}"`
             ].join(',');
             csv += csvRow + '\n';
         }
     });
 
     // Create download link
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

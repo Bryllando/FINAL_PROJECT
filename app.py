@@ -19,7 +19,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# FIXED: Increase max content length to handle images (16MB)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
@@ -38,13 +37,11 @@ def login_required(f):
 
 
 def validate_email(email):
-    """Validate email format"""
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
 
 def check_password_strength(password):
-    """Check password strength and return score and feedback"""
     score = 0
     feedback = []
 
@@ -89,46 +86,34 @@ def check_password_strength(password):
     }
 
 
-# FIXED: Helper function to save base64 image
 def save_base64_image(image_data, student_id):
-    """Save base64 image and return relative path"""
     try:
-        # Check if it's a base64 image
         if image_data.startswith('data:image'):
-            # Extract format and base64 data
             if ';base64,' in image_data:
-                # Get image format (jpeg, png, etc.)
                 format_part = image_data.split(';')[0].split('/')[-1]
                 image_data = image_data.split('base64,')[1]
             else:
                 format_part = 'jpeg'
 
-            # Decode base64
             image_binary = base64.b64decode(image_data)
-
-            # Generate filename with proper extension
             ext = 'jpg' if format_part == 'jpeg' else format_part
             filename = secure_filename(
                 f"{student_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
             )
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            # Save file
             with open(filepath, 'wb') as f:
                 f.write(image_binary)
 
-            # Return relative path
             image_path = f"images/{filename}"
             print(
                 f"Image saved successfully: {image_path}, size: {len(image_binary)} bytes")
             return image_path
 
         elif image_data.startswith('/static/'):
-            # It's an existing image path from the server
             return image_data.replace('/static/', '')
 
         elif image_data.startswith('images/'):
-            # Already in correct format
             return image_data
 
     except Exception as e:
@@ -140,9 +125,9 @@ def save_base64_image(image_data, student_id):
 
 @app.route('/')
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('admin'))
-    return render_template('index.html')
+    # Pass is_logged_in to template
+    is_logged_in = 'user_id' in session
+    return render_template('index.html', is_logged_in=is_logged_in)
 
 
 @app.route('/student-management')
@@ -272,6 +257,12 @@ def check_password_strength_api():
     return jsonify(result)
 
 
+@app.route('/api/check-auth')
+def check_auth():
+    """Check if user is authenticated"""
+    return jsonify({'authenticated': 'user_id' in session})
+
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -357,14 +348,9 @@ def delete_user_route(id):
     return redirect(url_for('admin'))
 
 
-# ============================================
-# FIXED STUDENT MANAGEMENT ROUTES
-# ============================================
-
 @app.route('/add_student', methods=['POST'])
 @login_required
 def add_student():
-    """Add new student with compressed image handling"""
     image_path = None
     image_data = request.form.get('image_data')
 
@@ -400,7 +386,6 @@ def add_student():
         flash('Student added successfully!', 'success')
         return redirect(url_for('student_management'))
     else:
-        # Delete uploaded image if database insert fails
         if image_path and image_path.startswith('images/'):
             try:
                 os.remove(os.path.join('static', image_path))
@@ -414,21 +399,16 @@ def add_student():
 @app.route('/save_student', methods=['POST'])
 @login_required
 def save_student():
-    """Update existing student with compressed image handling"""
     student_id = request.form.get('idno')
 
-    # Get existing student
     existing_student = db_helper.get_student_by_id(student_id)
     image_path = existing_student['image'] if existing_student else None
 
-    # Handle image data
     image_data = request.form.get('image_data')
 
     if image_data:
         try:
-            # Check if it's a new image or existing path
             if image_data.startswith('data:image'):
-                # New image - delete old one first
                 if image_path and image_path.startswith('images/'):
                     old_filepath = os.path.join('static', image_path)
                     if os.path.exists(old_filepath):
@@ -438,15 +418,12 @@ def save_student():
                         except Exception as e:
                             print(f"Error deleting old image: {e}")
 
-                # Save new compressed image
                 image_path = save_base64_image(image_data, student_id)
 
             elif image_data.startswith('/static/'):
-                # Existing image path
                 image_path = image_data.replace('/static/', '')
 
             elif image_data.startswith('images/'):
-                # Already in correct format
                 image_path = image_data
 
         except Exception as e:
@@ -474,7 +451,6 @@ def save_student():
 @app.route('/delete_student/<student_id>')
 @login_required
 def delete_student(student_id):
-    """Delete student and their image file"""
     student = db_helper.get_student_by_id(student_id)
     if student and student['image']:
         image_path = os.path.join('static', student['image'])
@@ -497,7 +473,6 @@ def delete_student(student_id):
 
 @app.route('/api/student/<student_id>')
 def get_student(student_id):
-    """Get student details by ID"""
     student = db_helper.get_student_by_id(student_id)
     if student:
         return jsonify({
@@ -510,7 +485,6 @@ def get_student(student_id):
 @app.route('/api/attendance/<date>')
 @login_required
 def get_attendance(date):
-    """Get attendance for a specific date"""
     try:
         attendance_records = db_helper.get_attendance_by_date(date)
         stats = db_helper.get_attendance_stats(date)
@@ -527,7 +501,6 @@ def get_attendance(date):
 @app.route('/api/attendance/mark', methods=['POST'])
 @login_required
 def mark_attendance():
-    """Mark attendance for a student"""
     try:
         data = request.get_json()
         student_idno = data.get('student_idno')
@@ -549,7 +522,6 @@ def mark_attendance():
 @app.route('/api/attendance/update_status', methods=['POST'])
 @login_required
 def update_attendance_status():
-    """Update attendance status"""
     try:
         data = request.get_json()
         student_idno = data.get('student_idno')

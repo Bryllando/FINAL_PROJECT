@@ -17,7 +17,7 @@
                         <div class="mb-4">
                             <div id="camera-container"
                                 class="w-full aspect-square bg-gray-300 rounded-lg flex items-center justify-center overflow-hidden border-4 border-gray-400 relative"
-                                style="max-height: 400px;">
+                                style="max-height: 300px; max-width: 300px; margin: 0 auto;">
                                 <!-- WebcamJS will attach here -->
                                 <div id="cameraPlaceholder"
                                     class="text-center absolute inset-0 flex flex-col items-center justify-center">
@@ -108,8 +108,8 @@
                         <!-- Profile Icon Display -->
                         <div class="flex justify-center mb-6">
                             <div class="relative">
-                                <div
-                                    class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300 overflow-hidden">
+                                <div class="profile-circle bg-gray-200 flex items-center justify-center border-4 border-gray-300 overflow-hidden"
+                                    style="width: 300px; height: 300px; border-radius: 0.5rem;">
                                     <img id="profileIcon" class="w-full h-full object-cover hidden" />
                                     <svg id="profilePlaceholder" class="w-16 h-16 text-gray-400" fill="currentColor"
                                         viewBox="0 0 20 20">
@@ -245,24 +245,34 @@
 <!-- Custom styles for webcam -->
 <style>
     /* Camera Container Styles - HD Quality Layout */
+    /* FIXED: Added max-width to constrain camera size and prevent overflow */
     #camera-container {
         position: relative;
         width: 100%;
         aspect-ratio: 1 / 1;
-        max-height: 400px;
+        max-height: 300px;
+        /* FIXED: Reduced from 400px to 300px for smaller size */
+        max-width: 300px;
+        /* FIXED: Added max-width constraint to match max-height */
         background-color: #d1d5db;
         border-radius: 0.5rem;
         border: 4px solid #9ca3af;
-        overflow: hidden;
+        overflow: hidden !important;
+        /* FIXED: Added !important to ensure overflow is hidden */
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    /* Webcam video element - fills entire container */
+    /* Webcam video element - constrained to container */
+    /* FIXED: Added max-width and max-height constraints to prevent video overflow */
     #camera-container video {
         width: 100% !important;
         height: 100% !important;
+        max-width: 100% !important;
+        /* FIXED: Prevents video from exceeding container width */
+        max-height: 100% !important;
+        /* FIXED: Prevents video from exceeding container height */
         object-fit: cover !important;
         position: absolute !important;
         top: 0 !important;
@@ -318,12 +328,15 @@
     }
 
     /* Ensure no extra spacing in camera container */
-    #camera-container>div:not(#cameraPlaceholder) {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
+    #camera-container>div:not(#cameraPlaceholder),
+    #camera-container>video {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
     }
 
     /* Fix for any flash content */
@@ -331,6 +344,8 @@
     #camera-container embed {
         width: 100% !important;
         height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
@@ -373,4 +388,5 @@
 <script src="{{ url_for('static', filename='js/student-camera.js') }}"></script>
 <!-- Load admin & student management script -->
 <script src="{{ url_for('static', filename='js/admin&student.js') }}"></script>
+
 {% endblock %}

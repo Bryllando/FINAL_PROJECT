@@ -27,8 +27,11 @@
         </div>
     </footer>
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Load scripts in correct order -->
+    <script src="{{ url_for('static', filename='js/html5-qrcode.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard-to-scanner.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/qr-scanner-student.js') }}"></script>
 </body>
 
 </html>
