@@ -321,9 +321,12 @@ def update_user():
     password = request.form.get('password')
 
     user_data = {
-        'email': email,
-        'password': password
+        'email': email
     }
+
+    # Only include password if it was provided (not empty)
+    if password and password.strip():
+        user_data['password'] = password
 
     success, message = db_helper.update_user(user_id, user_data)
 

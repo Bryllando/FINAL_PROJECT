@@ -1,5 +1,5 @@
 // ============================================
-// student_mngt.js - Consolidated + Fixed
+// admin&student.js - Fixed and Consolidated
 // ============================================
 
 // Shared helpers
@@ -46,6 +46,91 @@ function createModal(title, content) {
 function $qs(selector, parent = document) {
     return parent.querySelector(selector);
 }
+
+
+// Toggle password visibility in table
+function togglePassword(button) {
+    const passwordSpan = button.previousElementSibling;
+    const actualPassword = passwordSpan.getAttribute('data-password');
+
+    if (passwordSpan.textContent === '••••••••') {
+        passwordSpan.textContent = actualPassword;
+        button.setAttribute('title', 'Hide Password');
+    } else {
+        passwordSpan.textContent = '••••••••';
+        button.setAttribute('title', 'Show Password');
+    }
+}
+
+
+// ============================================
+// ADMIN: PASSWORD VIEW TOGGLE (admin.html)
+// ============================================
+
+// Edit user function - loads data into form
+function editUser(userId, email, password) {
+    const form = document.getElementById('userForm');
+    const emailField = document.getElementById('userEmail');
+    const passwordField = document.getElementById('userPassword');
+    const userIdField = document.getElementById('userId');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (!form || !emailField || !passwordField || !userIdField || !submitBtn) return;
+
+    // Populate form fields
+    emailField.value = email || '';
+    passwordField.value = password || '';
+    userIdField.value = userId || '';
+
+    // Change form action to update
+    form.action = '/update_user';
+
+    // Change button to UPDATE
+    submitBtn.textContent = 'UPDATE';
+    submitBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+    submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+
+    // Make password not required for updates
+    passwordField.required = false;
+
+    // Scroll to form
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Reset form to add mode
+function resetUserForm() {
+    const form = document.getElementById('userForm');
+    const userIdField = document.getElementById('userId');
+    const passwordField = document.getElementById('userPassword');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (!form) return;
+
+    // Reset form
+    form.reset();
+    form.action = '/add_user';
+
+    // Clear hidden ID
+    if (userIdField) userIdField.value = '';
+
+    // Make password required again
+    if (passwordField) passwordField.required = true;
+
+    // Change button back to SAVE
+    if (submitBtn) {
+        submitBtn.textContent = 'SAVE';
+        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        submitBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+    }
+}
+
+// Delete user with confirmation
+function deleteUser(userId, email) {
+    if (confirm(`Are you sure you want to delete user: ${email}?`)) {
+        window.location.href = `/delete_user/${userId}`;
+    }
+}
+
 
 // ============================================
 // ADMIN: User management helpers (kept minimal)
@@ -104,6 +189,7 @@ function deleteUser(userId, email) {
     }
 }
 
+// View user details in modal
 function viewUser(userId, email) {
     const modal = createModal('User Details', `
         <div class="space-y-4">
@@ -124,7 +210,6 @@ function viewUser(userId, email) {
 
     document.body.appendChild(modal);
 }
-
 // ============================================
 // STUDENT MANAGEMENT (student_mngt.html)
 // ============================================
@@ -355,7 +440,6 @@ function editStudent(studentId) {
         })
         .finally(() => {
             submitBtn.disabled = false;
-            // if the button still shows Loading... set it to original or SAVE
             if (submitBtn.textContent === 'Loading...') submitBtn.textContent = originalText || 'SAVE';
         });
 }
@@ -370,9 +454,12 @@ function cancelStudentForm() {
     }
 }
 
-// Export functions to window so they can be called from inline HTML handlers
+// ============================================
+// EXPORT ALL FUNCTIONS TO WINDOW
+// ============================================
 window.getYearLevel = getYearLevel;
 window.createModal = createModal;
+window.togglePassword = togglePassword;
 window.editUser = editUser;
 window.resetUserForm = resetUserForm;
 window.deleteUser = deleteUser;
@@ -389,3 +476,5 @@ window.editStudentRedirect = function (studentId) {
     sessionStorage.setItem('editStudentId', idToEdit);
     window.location.href = '/student';
 };
+
+console.log('✅ Admin & Student management script loaded');

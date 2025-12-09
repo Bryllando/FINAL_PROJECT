@@ -256,7 +256,7 @@ function showStudentModal(student) {
 
     // Create modal HTML
     const modalHTML = `
-        <div class="fixed inset-0 bg-opacity-50 flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+        <div class="fixed inset-0 bg-opacity-50 flex items-center justify-center z-9999 p-4 animate-fadeIn">
             <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slideUp">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">

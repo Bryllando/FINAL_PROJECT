@@ -149,17 +149,15 @@ function displayAttendance(attendanceRecords) {
         // Format times with AM/PM
         const timeIn = formatTimeWithAMPM(record.time_in);
         const timeOut = formatTimeWithAMPM(record.time_out);
-
         row.innerHTML = `
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-blue-600 font-semibold">${record.idno}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeIn}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeOut}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.Firstname} ${record.Lastname}</td>
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.course} - ${record.level}</td>
-            <td class="px-3 sm:px-4 py-3 text-center">
-                ${statusBadge}
-            </td>
-        `;
+    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-blue-600 font-semibold">${record.idno}</td>
+    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeIn}</td>
+    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.Firstname} ${record.Lastname}</td>
+    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.course} - ${record.level}</td>
+    <td class="px-3 sm:px-4 py-3 text-center">
+        ${statusBadge}
+    </td>
+`;
 
         tbody.appendChild(row);
 
@@ -342,7 +340,7 @@ function exportAttendance() {
     }
 
     // CSV Header
-    let csv = 'ID,Time In,Time Out,Full Name,Course & Level,Status\n';
+    let csv = 'ID,Time In,Full Name,Course & Level,Status\n';
 
     // CSV Rows
     rows.forEach(row => {
