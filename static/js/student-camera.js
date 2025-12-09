@@ -1,21 +1,25 @@
 // ============================================
-// STUDENT CAMERA FUNCTIONALITY
-// Using WebcamJS for camera capture
+// STUDENT CAMERA & QR FUNCTIONALITY
 // ============================================
 
+// Global Variables
 let cameraActive = false;
 let capturedImageData = null;
+let currentQRCode = null;
+let currentStudentId = null;
 
-// Initialize camera functionality when DOM is loaded
+// Initialize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Element References ---
     const cameraBtn = document.getElementById('cameraBtn');
     const captureBtn = document.getElementById('captureBtn');
     const retakeBtn = document.getElementById('retakeBtn');
     const fileUpload = document.getElementById('fileUpload');
     const studentForm = document.getElementById('studentForm');
     const cancelBtn = document.getElementById('cancelBtn');
+    const studentIdInput = document.getElementById('studentId');
 
-    // Configure Webcam.js with HD settings
+    // --- Webcam Configuration ---
     Webcam.set({
         width: 640,
         height: 640,
@@ -26,43 +30,44 @@ document.addEventListener('DOMContentLoaded', function () {
         fps: 30
     });
 
-    // Camera button click handler
-    if (cameraBtn) {
-        cameraBtn.addEventListener('click', toggleCamera);
+    // --- Event Listeners: Camera & Form ---
+    if (cameraBtn) cameraBtn.addEventListener('click', toggleCamera);
+    if (captureBtn) captureBtn.addEventListener('click', captureSnapshot);
+    if (retakeBtn) retakeBtn.addEventListener('click', retakePhoto);
+    if (fileUpload) fileUpload.addEventListener('change', handleFileUpload);
+    if (studentForm) studentForm.addEventListener('submit', handleFormSubmit);
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelStudentForm);
+
+    // --- Event Listeners: QR Code Generation ---
+    if (studentIdInput) {
+        // Generate on typing (after 3 chars)
+        studentIdInput.addEventListener('input', function (e) {
+            const studentId = e.target.value.trim();
+            if (studentId.length >= 3) {
+                generateQRCode(studentId);
+            }
+        });
+
+        // Generate on leave field
+        studentIdInput.addEventListener('blur', function (e) {
+            const studentId = e.target.value.trim();
+            if (studentId) {
+                generateQRCode(studentId);
+            }
+        });
     }
 
-    // Capture button click handler
-    if (captureBtn) {
-        captureBtn.addEventListener('click', captureSnapshot);
-    }
-
-    // Retake button click handler
-    if (retakeBtn) {
-        retakeBtn.addEventListener('click', retakePhoto);
-    }
-
-    // File upload handler
-    if (fileUpload) {
-        fileUpload.addEventListener('change', handleFileUpload);
-    }
-
-    // Form submit handler
-    if (studentForm) {
-        studentForm.addEventListener('submit', handleFormSubmit);
-    }
-
-    // Cancel button handler
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', cancelStudentForm);
-    }
-
-    // Check if we're editing a student
+    // --- Check for Edit Mode ---
     const editStudentId = sessionStorage.getItem('editStudentId');
     if (editStudentId) {
         loadStudentForEdit(editStudentId);
         sessionStorage.removeItem('editStudentId');
     }
 });
+
+// ============================================
+// CAMERA FUNCTIONS
+// ============================================
 
 // Toggle camera on/off
 function toggleCamera() {
@@ -75,7 +80,6 @@ function toggleCamera() {
 
 // Start the camera
 function startCamera() {
-    const cameraContainer = document.getElementById('camera-container');
     const cameraPlaceholder = document.getElementById('cameraPlaceholder');
     const cameraBtnText = document.getElementById('cameraBtnText');
     const cameraBtn = document.getElementById('cameraBtn');
@@ -84,20 +88,11 @@ function startCamera() {
     // Attach webcam
     Webcam.attach('#camera-container');
 
-    // Hide placeholder
-    if (cameraPlaceholder) {
-        cameraPlaceholder.style.display = 'none';
-    }
+    // UI Updates
+    if (cameraPlaceholder) cameraPlaceholder.style.display = 'none';
+    if (captureBtn) captureBtn.classList.remove('hidden');
+    if (cameraBtnText) cameraBtnText.textContent = 'Stop Camera';
 
-    // Show capture button
-    if (captureBtn) {
-        captureBtn.classList.remove('hidden');
-    }
-
-    // Update camera button
-    if (cameraBtnText) {
-        cameraBtnText.textContent = 'Stop Camera';
-    }
     if (cameraBtn) {
         cameraBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
         cameraBtn.classList.add('bg-red-500', 'hover:bg-red-600');
@@ -117,20 +112,11 @@ function stopCamera() {
     // Reset webcam
     Webcam.reset();
 
-    // Show placeholder
-    if (cameraPlaceholder) {
-        cameraPlaceholder.style.display = 'flex';
-    }
+    // UI Updates
+    if (cameraPlaceholder) cameraPlaceholder.style.display = 'flex';
+    if (captureBtn) captureBtn.classList.add('hidden');
+    if (cameraBtnText) cameraBtnText.textContent = 'Start Camera';
 
-    // Hide capture button
-    if (captureBtn) {
-        captureBtn.classList.add('hidden');
-    }
-
-    // Update camera button
-    if (cameraBtnText) {
-        cameraBtnText.textContent = 'Start Camera';
-    }
     if (cameraBtn) {
         cameraBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
         cameraBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
@@ -147,56 +133,36 @@ function captureSnapshot() {
         return;
     }
 
-    // Take snapshot
     Webcam.snap(function (data_uri) {
-        // Stop camera
         stopCamera();
-
-        // Compress and store image
         compressAndStoreImage(data_uri);
 
-        // Hide camera button and capture button
+        // UI Updates
         const cameraBtn = document.getElementById('cameraBtn');
         const captureBtn = document.getElementById('captureBtn');
-        if (cameraBtn) {
-            cameraBtn.classList.add('hidden');
-        }
-        if (captureBtn) {
-            captureBtn.classList.add('hidden');
-        }
-
-        // Show retake button
         const retakeBtn = document.getElementById('retakeBtn');
-        if (retakeBtn) {
-            retakeBtn.classList.remove('hidden');
-        }
+
+        if (cameraBtn) cameraBtn.classList.add('hidden');
+        if (captureBtn) captureBtn.classList.add('hidden');
+        if (retakeBtn) retakeBtn.classList.remove('hidden');
     });
 }
 
 // Retake photo
 function retakePhoto() {
-    // Clear captured image
     capturedImageData = null;
 
     // Hide photo preview
     const photoPreviewSection = document.getElementById('photoPreviewSection');
-    if (photoPreviewSection) {
-        photoPreviewSection.classList.add('hidden');
-    }
+    if (photoPreviewSection) photoPreviewSection.classList.add('hidden');
 
-    // Hide retake button
+    // Hide retake button, show camera button
     const retakeBtn = document.getElementById('retakeBtn');
-    if (retakeBtn) {
-        retakeBtn.classList.add('hidden');
-    }
-
-    // Show camera button again
     const cameraBtn = document.getElementById('cameraBtn');
-    if (cameraBtn) {
-        cameraBtn.classList.remove('hidden');
-    }
+    if (retakeBtn) retakeBtn.classList.add('hidden');
+    if (cameraBtn) cameraBtn.classList.remove('hidden');
 
-    // Reset profile icon
+    // Reset profile icon/placeholder
     const profileIcon = document.getElementById('profileIcon');
     const profilePlaceholder = document.getElementById('profilePlaceholder');
     const profileBadge = document.getElementById('profileBadge');
@@ -205,13 +171,7 @@ function retakePhoto() {
     if (profilePlaceholder) profilePlaceholder.classList.remove('hidden');
     if (profileBadge) profileBadge.classList.add('hidden');
 
-    // Hide QR Code section
-    const qrCodeSection = document.getElementById('qrCodeSection');
-    if (qrCodeSection) {
-        qrCodeSection.classList.add('hidden');
-    }
-
-    // Restart camera automatically
+    // Restart camera
     startCamera();
 }
 
@@ -240,26 +200,16 @@ function handleFileUpload(event) {
     reader.onload = function (e) {
         compressAndStoreImage(e.target.result);
 
-        // Hide camera button and capture button
+        if (cameraActive) stopCamera();
+
+        // UI Updates
         const cameraBtn = document.getElementById('cameraBtn');
         const captureBtn = document.getElementById('captureBtn');
-        if (cameraBtn) {
-            cameraBtn.classList.add('hidden');
-        }
-        if (captureBtn) {
-            captureBtn.classList.add('hidden');
-        }
-
-        // Stop camera if active
-        if (cameraActive) {
-            stopCamera();
-        }
-
-        // Show retake button
         const retakeBtn = document.getElementById('retakeBtn');
-        if (retakeBtn) {
-            retakeBtn.classList.remove('hidden');
-        }
+
+        if (cameraBtn) cameraBtn.classList.add('hidden');
+        if (captureBtn) captureBtn.classList.add('hidden');
+        if (retakeBtn) retakeBtn.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
 }
@@ -268,16 +218,14 @@ function handleFileUpload(event) {
 function compressAndStoreImage(dataUri) {
     const img = new Image();
     img.onload = function () {
-        // Create canvas for compression
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // Set max dimensions (640x640 for square)
         const maxSize = 640;
         let width = img.width;
         let height = img.height;
 
-        // Calculate new dimensions maintaining aspect ratio
+        // Maintain aspect ratio
         if (width > height) {
             if (width > maxSize) {
                 height = (height * maxSize) / width;
@@ -290,20 +238,12 @@ function compressAndStoreImage(dataUri) {
             }
         }
 
-        // Set canvas size
         canvas.width = width;
         canvas.height = height;
-
-        // Draw and compress image
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convert to compressed JPEG (quality 0.8)
         const compressedDataUri = canvas.toDataURL('image/jpeg', 0.8);
-
-        // Store compressed image
         capturedImageData = compressedDataUri;
-
-        // Update preview
         updateImagePreview(compressedDataUri);
 
         console.log('Image compressed and stored');
@@ -313,111 +253,230 @@ function compressAndStoreImage(dataUri) {
 
 // Update image preview
 function updateImagePreview(dataUri) {
-    // Update photo preview section
     const photoPreviewSection = document.getElementById('photoPreviewSection');
     const photoPreview = document.getElementById('photoPreview');
+    const profileIcon = document.getElementById('profileIcon');
+    const profilePlaceholder = document.getElementById('profilePlaceholder');
+    const profileBadge = document.getElementById('profileBadge');
 
     if (photoPreviewSection && photoPreview) {
         photoPreview.src = dataUri;
         photoPreviewSection.classList.remove('hidden');
     }
 
-    // Update profile icon
-    const profileIcon = document.getElementById('profileIcon');
-    const profilePlaceholder = document.getElementById('profilePlaceholder');
-    const profileBadge = document.getElementById('profileBadge');
-
     if (profileIcon) {
         profileIcon.src = dataUri;
         profileIcon.classList.remove('hidden');
     }
-    if (profilePlaceholder) {
-        profilePlaceholder.classList.add('hidden');
-    }
-    if (profileBadge) {
-        profileBadge.classList.remove('hidden');
-    }
+    if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
+    if (profileBadge) profileBadge.classList.remove('hidden');
 
-    // Generate QR Code if student ID is entered
+    // Trigger QR generation if ID exists
     const studentId = document.getElementById('studentId')?.value;
     if (studentId) {
         generateQRCode(studentId);
     }
 }
 
-// Generate QR Code
-function generateQRCode(studentId) {
-    const qrCodeSection = document.getElementById('qrCodeSection');
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
+// ============================================
+// QR CODE GENERATION AND DOWNLOAD
+// ============================================
 
-    if (!qrCodeContainer) return;
+/**
+ * Generate QR Code for student ID
+ */
+function generateQRCode(studentId) {
+    if (!studentId) {
+        console.warn('No student ID provided for QR generation');
+        return;
+    }
+
+    console.log('🔲 Generating QR Code for:', studentId);
+    currentStudentId = studentId;
+
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const qrCodeSection = document.getElementById('qrCodeSection');
+
+    if (!qrCodeContainer) {
+        console.error('QR Code container not found');
+        return;
+    }
 
     // Clear previous QR code
     qrCodeContainer.innerHTML = '';
 
-    // Show QR section
+    // Show QR code section
     if (qrCodeSection) {
         qrCodeSection.classList.remove('hidden');
     }
 
     // Generate new QR code
-    new QRCode(qrCodeContainer, {
+    currentQRCode = new QRCode(qrCodeContainer, {
         text: studentId,
-        width: 200,
-        height: 200,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
     });
 
-    console.log('QR Code generated for:', studentId);
+    console.log('✅ QR Code generated successfully');
 }
 
-// Download QR Code function
+/**
+ * Download QR Code as PNG with white background
+ */
 function downloadQRCode() {
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
-    const studentId = document.getElementById('studentId')?.value || 'student';
-
-    if (!qrCodeContainer) return;
-
-    const canvas = qrCodeContainer.querySelector('canvas');
-    if (!canvas) {
-        alert('No QR code to download');
+    if (!currentStudentId) {
+        alert('Please generate a QR code first by filling in the student ID');
         return;
     }
 
-    // Convert canvas to blob and download
-    canvas.toBlob(function (blob) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `qrcode-${studentId}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    });
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    if (!qrCodeContainer) {
+        alert('QR Code container not found');
+        return;
+    }
+
+    const canvas = qrCodeContainer.querySelector('canvas');
+    const img = qrCodeContainer.querySelector('img');
+
+    if (canvas) {
+        downloadFromCanvas(canvas);
+    } else if (img) {
+        downloadFromImage(img);
+    } else {
+        alert('QR Code not found. Please generate a QR code first.');
+    }
 }
 
-// Handle form submit
+/**
+ * Download from canvas (adds white border/padding)
+ * UPDATED: Creates a larger canvas to include a white margin
+ */
+function downloadFromCanvas(originalCanvas) {
+    try {
+        const padding = 25; // 25px white border
+        const canvas = document.createElement('canvas');
+
+        // Make new canvas larger than original to accommodate padding
+        canvas.width = originalCanvas.width + (padding * 2);
+        canvas.height = originalCanvas.height + (padding * 2);
+        const ctx = canvas.getContext('2d');
+
+        // Fill entire canvas with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the QR code in the center (offset by padding)
+        ctx.drawImage(originalCanvas, padding, padding);
+
+        const dataURL = canvas.toDataURL('image/png');
+        downloadImage(dataURL, `QR_${currentStudentId}.png`);
+    } catch (error) {
+        console.error('Error downloading QR code:', error);
+        alert('Error downloading QR code.');
+    }
+}
+
+/**
+ * Download from image (adds white border/padding)
+ * UPDATED: Creates a larger canvas to include a white margin
+ */
+function downloadFromImage(img) {
+    try {
+        const padding = 25; // 25px white border
+        const canvas = document.createElement('canvas');
+
+        const imgWidth = img.width || 256;
+        const imgHeight = img.height || 256;
+
+        // Make new canvas larger than original to accommodate padding
+        canvas.width = imgWidth + (padding * 2);
+        canvas.height = imgHeight + (padding * 2);
+        const ctx = canvas.getContext('2d');
+
+        // Fill entire canvas with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Image in the center (offset by padding)
+        ctx.drawImage(img, padding, padding);
+
+        const dataURL = canvas.toDataURL('image/png');
+        downloadImage(dataURL, `QR_${currentStudentId}.png`);
+    } catch (error) {
+        console.error('Error downloading QR code:', error);
+        alert('Error downloading QR code.');
+    }
+}
+
+function downloadImage(dataURL, filename) {
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function downloadQRCodeAsSVG() {
+    if (!currentStudentId) {
+        alert('Please generate a QR code first');
+        return;
+    }
+
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const svg = qrCodeContainer?.querySelector('svg');
+
+    if (!svg) {
+        alert('SVG QR Code not found');
+        return;
+    }
+
+    try {
+        const clonedSVG = svg.cloneNode(true);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', '#ffffff');
+        clonedSVG.insertBefore(rect, clonedSVG.firstChild);
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(clonedSVG);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `QR_${currentStudentId}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading SVG:', error);
+    }
+}
+
+// ============================================
+// FORM SUBMISSION & EDITING
+// ============================================
+
 function handleFormSubmit(event) {
-    // Validate that we have a captured image
     if (!capturedImageData) {
         event.preventDefault();
         alert('Please capture or upload a profile photo');
         return false;
     }
 
-    // Add image data to hidden field
     const imageDataField = document.getElementById('imageData');
     if (imageDataField) {
         imageDataField.value = capturedImageData;
     }
-
     return true;
 }
 
-// Load student for editing
 function loadStudentForEdit(studentId) {
     fetch(`/api/student/${studentId}`)
         .then(response => response.json())
@@ -425,34 +484,23 @@ function loadStudentForEdit(studentId) {
             if (data.success) {
                 const student = data.student;
 
-                // Populate form fields
                 document.getElementById('studentId').value = student.idno;
                 document.getElementById('lastName').value = student.Lastname;
                 document.getElementById('firstName').value = student.Firstname;
                 document.getElementById('course').value = student.course;
                 document.getElementById('level').value = student.level;
-
-                // Disable ID field
                 document.getElementById('studentId').disabled = true;
 
-                // Load existing image
                 if (student.image) {
                     let imagePath = student.image;
                     if (!imagePath.startsWith('/static/') && !imagePath.startsWith('http')) {
-                        if (imagePath.startsWith('images/')) {
-                            imagePath = `/static/${imagePath}`;
-                        } else {
-                            imagePath = `/static/images/${imagePath}`;
-                        }
+                        imagePath = imagePath.startsWith('images/')
+                            ? `/static/${imagePath}`
+                            : `/static/images/${imagePath}`;
                     }
-
-                    // Set as captured image data
                     capturedImageData = imagePath;
-
-                    // Update preview
                     updateImagePreview(imagePath);
 
-                    // Hide camera button and show retake button
                     const cameraBtn = document.getElementById('cameraBtn');
                     const captureBtn = document.getElementById('captureBtn');
                     const retakeBtn = document.getElementById('retakeBtn');
@@ -462,17 +510,14 @@ function loadStudentForEdit(studentId) {
                     if (retakeBtn) retakeBtn.classList.remove('hidden');
                 }
 
-                // Generate QR code
                 generateQRCode(student.idno);
 
-                // Change form action
+                // Update form visual state
                 const form = document.getElementById('studentForm');
-                if (form) {
-                    form.action = '/save_student';
-                }
-
-                // Update submit button
                 const submitBtn = document.getElementById('submitBtn');
+
+                if (form) form.action = '/save_student';
+
                 if (submitBtn) {
                     submitBtn.innerHTML = `
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,18 +537,12 @@ function loadStudentForEdit(studentId) {
         });
 }
 
-// Listen for student ID changes to generate QR code
-document.addEventListener('DOMContentLoaded', function () {
-    const studentIdField = document.getElementById('studentId');
-    if (studentIdField) {
-        studentIdField.addEventListener('blur', function () {
-            const studentId = this.value.trim();
-            if (studentId && capturedImageData) {
-                generateQRCode(studentId);
-            }
-        });
-    }
-});
+// ============================================
+// EXPORTS
+// ============================================
 
-// Make downloadQRCode available globally
+window.generateQRCode = generateQRCode;
 window.downloadQRCode = downloadQRCode;
+window.downloadQRCodeAsSVG = downloadQRCodeAsSVG;
+
+console.log('✅ Student Camera & QR Scripts loaded');
