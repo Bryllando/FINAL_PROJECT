@@ -1,6 +1,6 @@
 // ============================================
 // ATTENDANCE.HTML - ATTENDANCE MANAGEMENT FUNCTIONS
-// FIXED: Added AM/PM format for time display
+// FIXED: Added AM/PM format, responsive sizing, and proper calculations
 // ============================================
 
 // Attendance variables
@@ -126,8 +126,11 @@ function displayAttendance(attendanceRecords) {
     if (attendanceRecords.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                    No students found
+                <td colspan="5" class="px-4 sm:px-8 md:px-12 py-8 sm:py-12 md:py-16 text-center text-gray-500">
+                    <svg class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p class="text-base sm:text-xl md:text-2xl font-medium">No students found for this date</p>
                 </td>
             </tr>
         `;
@@ -140,7 +143,7 @@ function displayAttendance(attendanceRecords) {
 
         const statusClass = getStatusClass(record.status);
         const statusBadge = `
-            <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 cursor-pointer hover:opacity-80 transition">
+            <span class="${statusClass} px-2 sm:px-4 md:px-5 py-1 sm:py-2 md:py-3 rounded-full text-xs sm:text-base md:text-lg lg:text-xl font-bold inline-flex items-center gap-1 sm:gap-2 cursor-pointer hover:opacity-80 transition shadow-sm">
                 ${getStatusIcon(record.status)}
                 ${record.status}
             </span>
@@ -148,16 +151,16 @@ function displayAttendance(attendanceRecords) {
 
         // Format times with AM/PM
         const timeIn = formatTimeWithAMPM(record.time_in);
-        const timeOut = formatTimeWithAMPM(record.time_out);
+
         row.innerHTML = `
-    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-blue-600 font-semibold">${record.idno}</td>
-    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800 font-medium">${timeIn}</td>
-    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.Firstname} ${record.Lastname}</td>
-    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-800">${record.course} - ${record.level}</td>
-    <td class="px-3 sm:px-4 py-3 text-center">
-        ${statusBadge}
-    </td>
-`;
+            <td class="px-3 sm:px-6 md:px-10 py-3 sm:py-5 md:py-6 text-xs sm:text-lg md:text-xl lg:text-2xl text-blue-600 font-bold">${record.idno}</td>
+            <td class="px-3 sm:px-6 md:px-10 py-3 sm:py-5 md:py-6 text-xs sm:text-lg md:text-xl lg:text-2xl text-gray-800 font-semibold">${timeIn}</td>
+            <td class="px-3 sm:px-6 md:px-10 py-3 sm:py-5 md:py-6 text-xs sm:text-lg md:text-xl lg:text-2xl text-gray-800 font-medium">${record.Firstname} ${record.Lastname}</td>
+            <td class="px-3 sm:px-6 md:px-10 py-3 sm:py-5 md:py-6 text-xs sm:text-lg md:text-xl lg:text-2xl text-gray-700 font-medium">${record.course} - ${record.level}</td>
+            <td class="px-3 sm:px-6 md:px-10 py-3 sm:py-5 md:py-6 text-center">
+                ${statusBadge}
+            </td>
+        `;
 
         tbody.appendChild(row);
 
@@ -184,12 +187,18 @@ function updateStats(stats) {
     const lateEl = document.getElementById('lateCount');
     const absentEl = document.getElementById('absentCount');
 
-    if (totalEl) totalEl.textContent = stats.total || 0;
-    if (presentEl) presentEl.textContent = stats.present || 0;
-    if (lateEl) lateEl.textContent = stats.late || 0;
-    if (absentEl) absentEl.textContent = stats.absent || 0;
+    // Ensure values are numbers and non-negative
+    const total = Math.max(0, parseInt(stats.total) || 0);
+    const present = Math.max(0, parseInt(stats.present) || 0);
+    const late = Math.max(0, parseInt(stats.late) || 0);
+    const absent = Math.max(0, parseInt(stats.absent) || 0);
 
-    console.log('📊 Stats updated:', stats);
+    if (totalEl) totalEl.textContent = total;
+    if (presentEl) presentEl.textContent = present;
+    if (lateEl) lateEl.textContent = late;
+    if (absentEl) absentEl.textContent = absent;
+
+    console.log('📊 Stats updated:', { total, present, late, absent });
 }
 
 /**
@@ -227,18 +236,19 @@ function getStatusClass(status) {
 }
 
 /**
- * Get SVG icon for status
+ * Get SVG icon for status with responsive sizing
  * @param {string} status - Attendance status
  * @returns {string} - SVG icon HTML
  */
 function getStatusIcon(status) {
+    const iconSize = 'w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5';
     switch (status) {
         case 'PRESENT':
-            return '<svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            return `<svg class="${iconSize} inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
         case 'LATE':
-            return '<svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            return `<svg class="${iconSize} inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
         case 'ABSENT':
-            return '<svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            return `<svg class="${iconSize} inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
         default:
             return '';
     }
@@ -348,10 +358,9 @@ function exportAttendance() {
         const csvRow = [
             cells[0].textContent.trim(),
             cells[1].textContent.trim(),
-            cells[2].textContent.trim(),
-            `"${cells[3].textContent.trim()}"`, // Quotes for names with commas
-            `"${cells[4].textContent.trim()}"`, // Quotes for course info
-            cells[5].textContent.trim().replace(/\s+/g, ' ') // Clean up status text
+            `"${cells[2].textContent.trim()}"`, // Quotes for names with commas
+            `"${cells[3].textContent.trim()}"`, // Quotes for course info
+            cells[4].textContent.trim().replace(/\s+/g, ' ') // Clean up status text
         ].join(',');
         csv += csvRow + '\n';
     });
@@ -417,9 +426,8 @@ function getYearLevel(level) {
 }
 
 
-// ============================================
+
 // INITIALIZATION
-// ============================================
 
 // Initialize event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
